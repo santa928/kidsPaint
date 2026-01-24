@@ -1,0 +1,62 @@
+.color-picker-container {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.colors-scroll {
+    display: flex;
+    overflow-x: auto;
+    flex: 1;
+    gap: 12px;
+    padding: 4px;
+    /* Hide scrollbar for cleaner look */
+    scrollbar-width: none;
+}
+
+.colors-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.color-chip {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 4px solid white;
+    /* Default border */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.1s;
+}
+
+.color-chip.selected {
+    transform: scale(1.15);
+    border-color: #333;
+}
+
+.color-chip.rainbow {
+    background: linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ddd;
+}
+
+.color-chip.rainbow.selected {
+    border-color: #333;
+}
+
+.sound-control {
+    padding-left: 12px;
+    border-left: 1px solid #eee;
+    margin-left: 8px;
+}
+
+.sound-btn {
+    font-size: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}

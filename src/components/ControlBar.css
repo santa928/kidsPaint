@@ -1,0 +1,87 @@
+.control-bar-container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brush-sizes {
+    display: flex;
+    gap: 8px;
+}
+
+.size-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 4px 8px;
+    min-width: 50px;
+    cursor: pointer;
+}
+
+.size-btn.active {
+    background-color: #e0f7fa;
+    border-color: #00bcd4;
+}
+
+.size-btn .dot {
+    background-color: black;
+    border-radius: 50%;
+    margin-bottom: 4px;
+}
+
+.size-btn span {
+    font-size: 10px;
+    color: #555;
+}
+
+.tools {
+    display: flex;
+    gap: 8px;
+}
+
+.tool-btn {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    /* For progress bar */
+}
+
+.tool-btn.active {
+    background-color: #ffe0b2;
+    border-color: #ff9800;
+}
+
+.tool-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.clear-btn {
+    background-color: #ffebee;
+    border-color: #ef9a9a;
+    color: #d32f2f;
+}
+
+.progress-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: rgba(255, 0, 0, 0.3);
+    z-index: 0;
+}
+
+.btn-text {
+    position: relative;
+    z-index: 1;
+}
