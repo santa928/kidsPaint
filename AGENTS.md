@@ -5,3 +5,4 @@
 - インストールや実行系の作業は、基本的に Docker コンテナ内で行う。
   - 例: `docker compose run --rm web <command>` または `docker compose exec web <command>`
 - 破壊的操作や本番反映は事前に明示して許可を取る。
+- コミットメッセージは日本語で書く。

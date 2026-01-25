@@ -29,24 +29,34 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     const undoStackRef = useRef<ImageData[]>([]);
     const lastPosRef = useRef<{ x: number, y: number } | null>(null);
     const rainbowHueRef = useRef<number>(0);
-    const bufferCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const sourceCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const baseSizeRef = useRef<{ width: number, height: number } | null>(null);
 
-    const drawImageDataScaled = (
-        ctx: CanvasRenderingContext2D,
-        imageData: ImageData,
-        destWidth: number,
-        destHeight: number
-    ) => {
-        if (destWidth <= 0 || destHeight <= 0) return;
-        const buffer = bufferCanvasRef.current ?? document.createElement('canvas');
-        bufferCanvasRef.current = buffer;
-        buffer.width = imageData.width;
-        buffer.height = imageData.height;
-        const bufferCtx = buffer.getContext('2d');
-        if (!bufferCtx) return;
-        bufferCtx.putImageData(imageData, 0, 0);
-        ctx.clearRect(0, 0, destWidth, destHeight);
-        ctx.drawImage(buffer, 0, 0, destWidth, destHeight);
+    const ensureSourceCanvas = (displayWidth: number, displayHeight: number) => {
+        if (displayWidth <= 0 || displayHeight <= 0) return null;
+        if (!baseSizeRef.current) {
+            baseSizeRef.current = { width: displayWidth, height: displayHeight };
+        }
+        let source = sourceCanvasRef.current;
+        if (!source) {
+            source = document.createElement('canvas');
+            sourceCanvasRef.current = source;
+        }
+        const base = baseSizeRef.current;
+        if (source.width !== base.width || source.height !== base.height) {
+            source.width = base.width;
+            source.height = base.height;
+        }
+        return source;
+    };
+
+    const renderFromSource = (displayCanvas: HTMLCanvasElement) => {
+        const source = ensureSourceCanvas(displayCanvas.width, displayCanvas.height);
+        if (!source) return;
+        const ctx = displayCanvas.getContext('2d');
+        if (!ctx) return;
+        ctx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+        ctx.drawImage(source, 0, 0, displayCanvas.width, displayCanvas.height);
     };
 
     // Initialize canvas size
@@ -62,26 +72,9 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
                 if (nextWidth <= 0 || nextHeight <= 0) return;
                 if (canvas.width === nextWidth && canvas.height === nextHeight) return;
 
-                const ctx = canvas.getContext('2d');
-                let snapshot: ImageData | null = null;
-                if (ctx && canvas.width > 0 && canvas.height > 0) {
-                    try {
-                        snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    } catch {
-                        snapshot = null;
-                    }
-                }
-
                 canvas.width = nextWidth;
                 canvas.height = nextHeight;
-
-                const nextCtx = canvas.getContext('2d');
-                if (!nextCtx || !snapshot) return;
-                if (snapshot.width === nextWidth && snapshot.height === nextHeight) {
-                    nextCtx.putImageData(snapshot, 0, 0);
-                } else {
-                    drawImageDataScaled(nextCtx, snapshot, nextWidth, nextHeight);
-                }
+                renderFromSource(canvas);
                 // Fill white initially or just rely on CSS background? 
                 // If we want to save/export, we might need actual white pixels, 
                 // but for now CSS background is sufficient for display.
@@ -97,23 +90,25 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     useImperativeHandle(ref, () => ({
         undo: () => {
             const canvas = canvasRef.current;
-            const ctx = canvas?.getContext('2d');
-            if (!canvas || !ctx || undoStackRef.current.length === 0) return;
+            if (!canvas || undoStackRef.current.length === 0) return;
+            const source = ensureSourceCanvas(canvas.width, canvas.height);
+            const sourceCtx = source?.getContext('2d');
+            if (!source || !sourceCtx) return;
 
             const previous = undoStackRef.current.pop();
             if (previous) {
-                if (previous.width === canvas.width && previous.height === canvas.height) {
-                    ctx.putImageData(previous, 0, 0);
-                } else {
-                    drawImageDataScaled(ctx, previous, canvas.width, canvas.height);
-                }
+                sourceCtx.clearRect(0, 0, source.width, source.height);
+                sourceCtx.putImageData(previous, 0, 0);
+                renderFromSource(canvas);
             }
             onHistoryChange(undoStackRef.current.length > 0);
         },
         clear: () => {
             const canvas = canvasRef.current;
-            const ctx = canvas?.getContext('2d');
-            if (!canvas || !ctx) return;
+            if (!canvas) return;
+            const source = ensureSourceCanvas(canvas.width, canvas.height);
+            const sourceCtx = source?.getContext('2d');
+            if (!source || !sourceCtx) return;
 
             saveState(); // Save before clear? Issue says "MVP: Can't undo clear". 
             // But implementation note said "Clear stack after clear" in one option.
@@ -122,20 +117,23 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
             undoStackRef.current = [];
             onHistoryChange(false);
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            sourceCtx.clearRect(0, 0, source.width, source.height);
+            renderFromSource(canvas);
         }
     }));
 
     const saveState = () => {
         const canvas = canvasRef.current;
-        const ctx = canvas?.getContext('2d');
-        if (!canvas || !ctx) return;
-        if (canvas.width <= 0 || canvas.height <= 0) return;
+        if (!canvas) return;
+        const source = ensureSourceCanvas(canvas.width, canvas.height);
+        const sourceCtx = source?.getContext('2d');
+        if (!source || !sourceCtx) return;
+        if (source.width <= 0 || source.height <= 0) return;
 
         if (undoStackRef.current.length >= 20) {
             undoStackRef.current.shift(); // Remove oldest
         }
-        undoStackRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        undoStackRef.current.push(sourceCtx.getImageData(0, 0, source.width, source.height));
         onHistoryChange(true);
     };
 
@@ -143,9 +141,14 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
         const rect = canvas.getBoundingClientRect();
+        const source = ensureSourceCanvas(canvas.width, canvas.height);
+        if (!source) return { x: 0, y: 0 };
+        if (rect.width === 0 || rect.height === 0) return { x: 0, y: 0 };
+        const scaleX = source.width / rect.width;
+        const scaleY = source.height / rect.height;
         return {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY
         };
     };
 
@@ -161,15 +164,22 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         onDrawStart?.();
 
         // Draw a dot if just tapped?
-        const ctx = canvasRef.current?.getContext('2d');
-        if (ctx && lastPosRef.current) {
+        const canvas = canvasRef.current;
+        if (canvas && lastPosRef.current) {
+            const source = ensureSourceCanvas(canvas.width, canvas.height);
+            const ctx = source?.getContext('2d');
+            if (!source || !ctx) return;
+            const scaleX = source.width / canvas.width;
+            const scaleY = source.height / canvas.height;
+            const brushScale = (scaleX + scaleY) / 2;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.beginPath();
-            ctx.arc(lastPosRef.current.x, lastPosRef.current.y, brushSize / 2, 0, Math.PI * 2);
+            ctx.arc(lastPosRef.current.x, lastPosRef.current.y, (brushSize / 2) * brushScale, 0, Math.PI * 2);
             ctx.fillStyle = isEraser ? 'rgba(0,0,0,1)' : (isRainbow ? `hsl(${rainbowHueRef.current}, 100%, 50%)` : color);
             ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
             ctx.fill();
+            renderFromSource(canvas);
         }
     };
 
@@ -177,13 +187,18 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         if (!isDrawing || !lastPosRef.current) return;
 
         const canvas = canvasRef.current;
-        const ctx = canvas?.getContext('2d');
-        if (!canvas || !ctx) return;
+        if (!canvas) return;
+        const source = ensureSourceCanvas(canvas.width, canvas.height);
+        const ctx = source?.getContext('2d');
+        if (!source || !ctx) return;
 
         const currentPos = getPoint(e);
         const dist = Math.hypot(currentPos.x - lastPosRef.current.x, currentPos.y - lastPosRef.current.y);
 
-        ctx.lineWidth = brushSize;
+        const scaleX = source.width / canvas.width;
+        const scaleY = source.height / canvas.height;
+        const brushScale = (scaleX + scaleY) / 2;
+        ctx.lineWidth = brushSize * brushScale;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
@@ -202,6 +217,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
 
         ctx.stroke();
         lastPosRef.current = currentPos;
+        renderFromSource(canvas);
     };
 
     const handlePointerUp = (e: React.PointerEvent) => {
