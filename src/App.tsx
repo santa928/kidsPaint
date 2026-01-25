@@ -3,13 +3,27 @@ import './App.css';
 import { ColorPicker } from './components/ColorPicker';
 import { ControlBar } from './components/ControlBar';
 import { Canvas, type CanvasHandle } from './components/Canvas';
+import { StampPicker } from './components/StampPicker';
 import { soundManager } from './SoundManager';
+import type { StampId } from './types';
+
+const STAMPS: { id: StampId; label: string; icon: string }[] = [
+  { id: 'circle', label: 'まる', icon: '○' },
+  { id: 'cross', label: 'ばつ', icon: '✕' },
+  { id: 'square', label: 'しかく', icon: '□' },
+  { id: 'triangle', label: 'さんかく', icon: '△' },
+  { id: 'rabbit', label: 'うさぎ', icon: '🐰' },
+  { id: 'bird', label: 'とり', icon: '🐦' },
+  { id: 'train', label: 'でんしゃ', icon: '🚆' },
+];
 
 function App() {
   const [color, setColor] = useState('#000000');
   const [brushSize, setBrushSize] = useState(8);
   const [isEraser, setIsEraser] = useState(false);
   const [isRainbow, setIsRainbow] = useState(false);
+  const [isStampMode, setIsStampMode] = useState(false);
+  const [selectedStamp, setSelectedStamp] = useState<StampId>('circle');
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
     try {
@@ -43,11 +57,28 @@ function App() {
     setColor(c);
     setIsEraser(false);
     setIsRainbow(false);
+    setIsStampMode(false);
   };
 
   const handleRainbowSelect = () => {
     setIsRainbow(true);
     setIsEraser(false);
+    setIsStampMode(false);
+  };
+
+  const handleSelectStamp = (stampId: StampId) => {
+    setSelectedStamp(stampId);
+    setIsStampMode(true);
+    setIsEraser(false);
+    setIsRainbow(false);
+  };
+
+  const handleSelectDrawMode = () => {
+    setIsStampMode(false);
+  };
+
+  const handleBrushSizeChange = (size: number) => {
+    setBrushSize(size);
   };
 
   const handleDrawStart = () => {
@@ -70,6 +101,13 @@ function App() {
           soundEnabled={soundEnabled}
           onToggleSound={toggleSound}
         />
+        <StampPicker
+          stamps={STAMPS}
+          selectedStamp={selectedStamp}
+          isStampMode={isStampMode}
+          onSelectStamp={handleSelectStamp}
+          onSelectDrawMode={handleSelectDrawMode}
+        />
       </header>
 
       <main className="canvas-area">
@@ -79,6 +117,8 @@ function App() {
           brushSize={brushSize}
           isEraser={isEraser}
           isRainbow={isRainbow}
+          isStampMode={isStampMode}
+          stampId={selectedStamp}
           onHistoryChange={setCanUndo}
           onDrawStart={handleDrawStart}
           onDrawEnd={handleDrawEnd}
@@ -88,14 +128,16 @@ function App() {
       <footer className="bottom-bar">
         <ControlBar
           brushSize={brushSize}
-          setBrushSize={setBrushSize}
+          setBrushSize={handleBrushSizeChange}
           isEraser={isEraser}
           toggleEraser={() => {
-            setIsEraser(!isEraser);
+            const next = !isEraser;
+            setIsEraser(next);
+            setIsStampMode(false);
             // Disable rainbow if eraser on, or keep state? Usually eraser overrides color.
             // If we toggle eraser off, we return to previous state? 
             // Simplification: Turn off rainbow when Eraser is activated.
-            if (!isEraser) setIsRainbow(false);
+            if (next) setIsRainbow(false);
           }}
           onUndo={() => canvasRef.current?.undo()}
           canUndo={canUndo}

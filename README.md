@@ -1,3 +1,17 @@
+# Kids Paint
+
+Simple drawing app for kids with brush, rainbow, and stamps (shapes/animals/train).
+
+## Usage
+- Pick a color from the top bar.
+- Switch to Stamp mode and tap the canvas to place a stamp.
+- Use eraser, undo, or long-press clear-all as needed.
+
+## Development (Docker)
+```sh
+docker compose up --build
+```
+
 # React + TypeScript + Vite
 
 ## GitHub Pages

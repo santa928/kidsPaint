@@ -12,8 +12,10 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   z-index: 10;
   display: flex;
-  align-items: center;
-  overflow-x: auto;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  overflow-x: hidden;
 }
 
 .canvas-area {

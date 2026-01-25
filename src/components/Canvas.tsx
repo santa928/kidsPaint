@@ -1,10 +1,13 @@
 import React, { useRef, useEffect, useState, useImperativeHandle, forwardRef } from 'react';
+import type { StampId } from '../types';
 
 interface CanvasProps {
     color: string;
     brushSize: number;
     isEraser: boolean;
     isRainbow: boolean;
+    isStampMode: boolean;
+    stampId: StampId;
     onHistoryChange: (canUndo: boolean) => void;
     onDrawStart?: () => void;
     onDrawEnd?: () => void;
@@ -20,6 +23,8 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     brushSize,
     isEraser,
     isRainbow,
+    isStampMode,
+    stampId,
     onHistoryChange,
     onDrawStart,
     onDrawEnd,
@@ -153,6 +158,27 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     };
 
     const handlePointerDown = (e: React.PointerEvent) => {
+        if (isStampMode) {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const source = ensureSourceCanvas(canvas.width, canvas.height);
+            const ctx = source?.getContext('2d');
+            if (!source || !ctx) return;
+
+            const point = getPoint(e);
+            const scaleX = source.width / canvas.width;
+            const scaleY = source.height / canvas.height;
+            const stampScale = (scaleX + scaleY) / 2;
+            const stampSize = getStampBaseSize(brushSize) * stampScale;
+
+            saveState();
+            onDrawStart?.();
+            drawStamp(ctx, stampId, point.x, point.y, stampSize, color);
+            renderFromSource(canvas);
+            onDrawEnd?.();
+            return;
+        }
+
         e.currentTarget.setPointerCapture(e.pointerId);
         setIsDrawing(true);
         lastPosRef.current = getPoint(e);
@@ -184,6 +210,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     };
 
     const handlePointerMove = (e: React.PointerEvent) => {
+        if (isStampMode) return;
         if (!isDrawing || !lastPosRef.current) return;
 
         const canvas = canvasRef.current;
@@ -240,3 +267,204 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         />
     );
 });
+
+const drawStamp = (
+    ctx: CanvasRenderingContext2D,
+    stampId: StampId,
+    x: number,
+    y: number,
+    size: number,
+    color: string
+) => {
+    const shapeLine = Math.max(2, size * 0.12);
+    const creatureLine = Math.max(1.2, size * 0.045);
+    const creatureDetail = Math.max(0.8, size * 0.022);
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = shapeLine;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    switch (stampId) {
+        case 'circle': {
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.38, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            break;
+        }
+        case 'cross': {
+            const len = size * 0.42;
+            ctx.beginPath();
+            ctx.moveTo(x - len, y - len);
+            ctx.lineTo(x + len, y + len);
+            ctx.moveTo(x + len, y - len);
+            ctx.lineTo(x - len, y + len);
+            ctx.stroke();
+            break;
+        }
+        case 'square': {
+            const s = size * 0.7;
+            ctx.beginPath();
+            ctx.rect(x - s / 2, y - s / 2, s, s);
+            ctx.fill();
+            ctx.stroke();
+            break;
+        }
+        case 'triangle': {
+            const h = size * 0.7;
+            const w = size * 0.7;
+            ctx.beginPath();
+            ctx.moveTo(x, y - h / 2);
+            ctx.lineTo(x + w / 2, y + h / 2);
+            ctx.lineTo(x - w / 2, y + h / 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            break;
+        }
+        case 'rabbit': {
+            const thick = creatureLine * 1.1;
+            const detail = creatureDetail;
+            ctx.lineWidth = thick;
+
+            const headR = size * 0.3;
+            const headY = y + size * 0.08;
+            const earW = size * 0.1;
+            const earH = size * 0.32;
+            const earGap = -size * 0.02;
+            const earY = headY - headR - earH - earGap;
+            const earOffset = size * 0.11;
+
+            // Ears (kept above head to avoid overlap)
+            ctx.beginPath();
+            ctx.ellipse(x - earOffset, earY, earW, earH, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + earOffset, earY, earW, earH, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Head
+            ctx.beginPath();
+            ctx.arc(x, headY, headR, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Eyes
+            ctx.lineWidth = Math.max(detail * 1.8, 1.4);
+            ctx.beginPath();
+            ctx.moveTo(x - size * 0.095, headY - size * 0.05);
+            ctx.lineTo(x - size * 0.094, headY - size * 0.05);
+            ctx.moveTo(x + size * 0.095, headY - size * 0.05);
+            ctx.lineTo(x + size * 0.094, headY - size * 0.05);
+            ctx.stroke();
+
+            // Mouth (simple smile)
+            ctx.beginPath();
+            ctx.moveTo(x - size * 0.045, headY + size * 0.055);
+            ctx.quadraticCurveTo(x, headY + size * 0.085, x + size * 0.045, headY + size * 0.055);
+            ctx.stroke();
+
+            break;
+        }
+        case 'bird': {
+            const thick = creatureLine * 1.1;
+            const detail = creatureDetail;
+            ctx.lineWidth = thick;
+
+            const bodyR = size * 0.28;
+            const bodyY = y + size * 0.06;
+
+            // Body
+            ctx.beginPath();
+            ctx.arc(x, bodyY, bodyR, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Wing (single curve inside body)
+            ctx.lineWidth = detail;
+            ctx.beginPath();
+            ctx.arc(x - size * 0.02, bodyY + size * 0.02, size * 0.16, Math.PI * 0.9, Math.PI * 1.8);
+            ctx.stroke();
+
+            // Eye
+            ctx.beginPath();
+            ctx.lineWidth = Math.max(detail * 1.8, 1.4);
+            ctx.moveTo(x + size * 0.1, bodyY - size * 0.04);
+            ctx.lineTo(x + size * 0.101, bodyY - size * 0.04);
+            ctx.stroke();
+
+            // Beak
+            ctx.lineWidth = thick;
+            ctx.beginPath();
+            ctx.moveTo(x + bodyR - size * 0.01, bodyY - size * 0.01);
+            ctx.lineTo(x + bodyR + size * 0.08, bodyY + size * 0.02);
+            ctx.lineTo(x + bodyR - size * 0.01, bodyY + size * 0.05);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Tail (two short lines)
+            ctx.lineWidth = detail;
+            ctx.beginPath();
+            ctx.moveTo(x - bodyR, bodyY + size * 0.02);
+            ctx.lineTo(x - bodyR - size * 0.1, bodyY - size * 0.02);
+            ctx.moveTo(x - bodyR, bodyY + size * 0.06);
+            ctx.lineTo(x - bodyR - size * 0.1, bodyY + size * 0.12);
+            ctx.stroke();
+
+            // Cheek + tiny crest
+            ctx.beginPath();
+            ctx.arc(x + size * 0.05, bodyY + size * 0.02, size * 0.02, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.02, bodyY - bodyR - size * 0.02);
+            ctx.lineTo(x + size * 0.06, bodyY - bodyR - size * 0.12);
+            ctx.stroke();
+            break;
+        }
+        case 'train': {
+            const bodyW = size * 0.8;
+            const bodyH = size * 0.38;
+            const bodyX = x - bodyW / 2;
+            const bodyY = y - bodyH / 2;
+
+            ctx.lineWidth = creatureLine * 1.1;
+            ctx.beginPath();
+            ctx.rect(bodyX, bodyY, bodyW, bodyH);
+            ctx.stroke();
+
+            const cabinW = size * 0.28;
+            const cabinH = size * 0.22;
+            ctx.beginPath();
+            ctx.rect(x - size * 0.12, y - bodyH / 2 - cabinH * 0.6, cabinW, cabinH);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.rect(x - size * 0.42, y - bodyH / 2 - size * 0.2, size * 0.12, size * 0.2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(x - size * 0.28, y + bodyH / 2 + size * 0.06, size * 0.12, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.02, y + bodyH / 2 + size * 0.06, size * 0.12, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.32, y + bodyH / 2 + size * 0.06, size * 0.12, 0, Math.PI * 2);
+            ctx.stroke();
+
+            const detail = creatureDetail;
+            ctx.lineWidth = detail;
+            ctx.beginPath();
+            ctx.rect(x - size * 0.06, y - size * 0.12, size * 0.18, size * 0.12);
+            ctx.rect(x + size * 0.18, y - size * 0.12, size * 0.18, size * 0.12);
+            ctx.stroke();
+            break;
+        }
+        default:
+            break;
+    }
+
+    ctx.restore();
+};
+
+const getStampBaseSize = (brushSize: number) => {
+    if (brushSize <= 4) return 52;
+    if (brushSize <= 8) return 78;
+    return 110;
+};
