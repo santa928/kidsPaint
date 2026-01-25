@@ -30,10 +30,13 @@ export const ControlBar: React.FC<ControlBarProps> = ({
     const [pressProgress, setPressProgress] = useState(0);
     const startTimeRef = useRef<number>(0);
     const animationFrameRef = useRef<number | null>(null);
+    const isPressingRef = useRef(false);
 
     const LONG_PRESS_DURATION = 600; // ms
 
     const startPress = () => {
+        if (isPressingRef.current) return;
+        isPressingRef.current = true;
         startTimeRef.current = Date.now();
         setPressProgress(0);
 
@@ -58,6 +61,8 @@ export const ControlBar: React.FC<ControlBarProps> = ({
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = null;
         }
+        isPressingRef.current = false;
+        startTimeRef.current = 0;
         setPressProgress(0);
     };
 
@@ -99,10 +104,8 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                     className="tool-btn clear-btn"
                     onPointerDown={startPress}
                     onPointerUp={resetPress}
+                    onPointerCancel={resetPress}
                     onPointerLeave={resetPress}
-                    // Touch events for mobile ensures better response
-                    onTouchStart={startPress}
-                    onTouchEnd={(e) => { e.preventDefault(); resetPress(); }}
                 >
                     <div className="progress-bg" style={{ width: `${pressProgress}%` }} />
                     <span className="btn-text">ぜんぶけす</span>
