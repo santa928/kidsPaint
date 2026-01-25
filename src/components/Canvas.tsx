@@ -29,6 +29,25 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     const undoStackRef = useRef<ImageData[]>([]);
     const lastPosRef = useRef<{ x: number, y: number } | null>(null);
     const rainbowHueRef = useRef<number>(0);
+    const bufferCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    const drawImageDataScaled = (
+        ctx: CanvasRenderingContext2D,
+        imageData: ImageData,
+        destWidth: number,
+        destHeight: number
+    ) => {
+        if (destWidth <= 0 || destHeight <= 0) return;
+        const buffer = bufferCanvasRef.current ?? document.createElement('canvas');
+        bufferCanvasRef.current = buffer;
+        buffer.width = imageData.width;
+        buffer.height = imageData.height;
+        const bufferCtx = buffer.getContext('2d');
+        if (!bufferCtx) return;
+        bufferCtx.putImageData(imageData, 0, 0);
+        ctx.clearRect(0, 0, destWidth, destHeight);
+        ctx.drawImage(buffer, 0, 0, destWidth, destHeight);
+    };
 
     // Initialize canvas size
     useEffect(() => {
@@ -38,8 +57,31 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         const resize = () => {
             const parent = canvas.parentElement;
             if (parent) {
-                canvas.width = parent.clientWidth;
-                canvas.height = parent.clientHeight;
+                const nextWidth = parent.clientWidth;
+                const nextHeight = parent.clientHeight;
+                if (nextWidth <= 0 || nextHeight <= 0) return;
+                if (canvas.width === nextWidth && canvas.height === nextHeight) return;
+
+                const ctx = canvas.getContext('2d');
+                let snapshot: ImageData | null = null;
+                if (ctx && canvas.width > 0 && canvas.height > 0) {
+                    try {
+                        snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    } catch {
+                        snapshot = null;
+                    }
+                }
+
+                canvas.width = nextWidth;
+                canvas.height = nextHeight;
+
+                const nextCtx = canvas.getContext('2d');
+                if (!nextCtx || !snapshot) return;
+                if (snapshot.width === nextWidth && snapshot.height === nextHeight) {
+                    nextCtx.putImageData(snapshot, 0, 0);
+                } else {
+                    drawImageDataScaled(nextCtx, snapshot, nextWidth, nextHeight);
+                }
                 // Fill white initially or just rely on CSS background? 
                 // If we want to save/export, we might need actual white pixels, 
                 // but for now CSS background is sufficient for display.
@@ -60,7 +102,11 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
 
             const previous = undoStackRef.current.pop();
             if (previous) {
-                ctx.putImageData(previous, 0, 0);
+                if (previous.width === canvas.width && previous.height === canvas.height) {
+                    ctx.putImageData(previous, 0, 0);
+                } else {
+                    drawImageDataScaled(ctx, previous, canvas.width, canvas.height);
+                }
             }
             onHistoryChange(undoStackRef.current.length > 0);
         },
@@ -84,6 +130,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
         if (!canvas || !ctx) return;
+        if (canvas.width <= 0 || canvas.height <= 0) return;
 
         if (undoStackRef.current.length >= 20) {
             undoStackRef.current.shift(); // Remove oldest
