@@ -22,9 +22,24 @@
 .stamps-scroll {
     display: flex;
     overflow-x: auto;
+    overflow-y: hidden;
     gap: 10px;
-    padding: 2px 4px;
+    padding: 8px 10px;
     scrollbar-width: none;
+    position: fixed;
+    top: calc(var(--top-bar-height, 60px) + 6px);
+    left: 10px;
+    right: 10px;
+    max-width: calc(100vw - 20px);
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    z-index: 30;
+    pointer-events: auto;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
 }
 
 .stamps-scroll::-webkit-scrollbar {

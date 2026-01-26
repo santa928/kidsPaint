@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, type CSSProperties } from 'react';
 import './App.css';
 import { ColorPicker } from './components/ColorPicker';
 import { ControlBar } from './components/ControlBar';
@@ -38,6 +38,25 @@ function App() {
   const [canUndo, setCanUndo] = useState(false);
 
   const canvasRef = useRef<CanvasHandle>(null);
+  const topBarRef = useRef<HTMLElement>(null);
+  const [topBarHeight, setTopBarHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const update = () => {
+      const rect = topBarRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setTopBarHeight(Math.ceil(rect.height));
+    };
+    update();
+    if (!topBarRef.current) return;
+    const observer = new ResizeObserver(update);
+    observer.observe(topBarRef.current);
+    window.addEventListener('resize', update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -70,7 +89,7 @@ function App() {
   const handleSelectStamp = (stampId: StampId) => {
     setSelectedStamp(stampId);
     setIsStampMode(true);
-    setIsStampPanelOpen(true);
+    setIsStampPanelOpen(false);
     setIsEraser(false);
     setIsRainbow(false);
   };
@@ -92,9 +111,11 @@ function App() {
     soundManager.playEndSound();
   };
 
+  const appStyle = { '--top-bar-height': `${topBarHeight}px` } as CSSProperties;
+
   return (
-    <div className="app-container">
-      <header className="top-bar">
+    <div className={`app-container ${isStampPanelOpen ? 'stamp-panel-open' : ''}`} style={appStyle}>
+      <header className="top-bar" ref={topBarRef}>
         <ColorPicker
           selectedColor={color}
           onSelectColor={handleColorSelect}
@@ -113,6 +134,14 @@ function App() {
           onToggleOpen={() => setIsStampPanelOpen((prev) => !prev)}
         />
       </header>
+
+      {isStampPanelOpen && (
+        <div
+          className="stamp-overlay-mask"
+          onClick={() => setIsStampPanelOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
       <main className="canvas-area">
         <Canvas
