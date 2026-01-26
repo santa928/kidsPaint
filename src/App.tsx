@@ -24,6 +24,7 @@ function App() {
   const [isRainbow, setIsRainbow] = useState(false);
   const [isStampMode, setIsStampMode] = useState(false);
   const [selectedStamp, setSelectedStamp] = useState<StampId>('circle');
+  const [isStampPanelOpen, setIsStampPanelOpen] = useState(false);
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
     try {
@@ -69,6 +70,7 @@ function App() {
   const handleSelectStamp = (stampId: StampId) => {
     setSelectedStamp(stampId);
     setIsStampMode(true);
+    setIsStampPanelOpen(true);
     setIsEraser(false);
     setIsRainbow(false);
   };
@@ -105,8 +107,10 @@ function App() {
           stamps={STAMPS}
           selectedStamp={selectedStamp}
           isStampMode={isStampMode}
+          isOpen={isStampPanelOpen}
           onSelectStamp={handleSelectStamp}
           onSelectDrawMode={handleSelectDrawMode}
+          onToggleOpen={() => setIsStampPanelOpen((prev) => !prev)}
         />
       </header>
 

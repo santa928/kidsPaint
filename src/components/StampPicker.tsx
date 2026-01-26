@@ -12,21 +12,33 @@ interface StampPickerProps {
     stamps: StampItem[];
     selectedStamp: StampId;
     isStampMode: boolean;
+    isOpen: boolean;
     onSelectStamp: (id: StampId) => void;
     onSelectDrawMode: () => void;
+    onToggleOpen: () => void;
 }
 
 export const StampPicker: React.FC<StampPickerProps> = ({
     stamps,
     selectedStamp,
     isStampMode,
+    isOpen,
     onSelectStamp,
     onSelectDrawMode,
+    onToggleOpen,
 }) => {
     return (
-        <div className="stamp-picker-container">
+        <div className={`stamp-picker-container ${isOpen ? 'open' : 'closed'}`}>
             <div className="stamp-header">
                 <span className="stamp-title">スタンプ</span>
+                <button
+                    className={`stamp-chip stamp-toggle ${isOpen ? 'open' : ''}`}
+                    onClick={onToggleOpen}
+                    aria-expanded={isOpen}
+                    aria-label={isOpen ? 'スタンプ一覧を閉じる' : 'スタンプ一覧を開く'}
+                >
+                    {isOpen ? '閉じる ▲' : '開く ▼'}
+                </button>
                 <button
                     className={`stamp-chip draw-mode ${!isStampMode ? 'selected' : ''}`}
                     onClick={onSelectDrawMode}
@@ -35,19 +47,21 @@ export const StampPicker: React.FC<StampPickerProps> = ({
                     ✏️
                 </button>
             </div>
-            <div className="stamps-scroll">
-                {stamps.map((stamp) => (
-                    <button
-                        key={stamp.id}
-                        className={`stamp-chip ${isStampMode && selectedStamp === stamp.id ? 'selected' : ''}`}
-                        onClick={() => onSelectStamp(stamp.id)}
-                        aria-label={stamp.label}
-                    >
-                        <span className="stamp-icon">{stamp.icon}</span>
-                        <span className="stamp-label">{stamp.label}</span>
-                    </button>
-                ))}
-            </div>
+            {isOpen && (
+                <div className="stamps-scroll">
+                    {stamps.map((stamp) => (
+                        <button
+                            key={stamp.id}
+                            className={`stamp-chip ${isStampMode && selectedStamp === stamp.id ? 'selected' : ''}`}
+                            onClick={() => onSelectStamp(stamp.id)}
+                            aria-label={stamp.label}
+                        >
+                            <span className="stamp-icon">{stamp.icon}</span>
+                            <span className="stamp-label">{stamp.label}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
