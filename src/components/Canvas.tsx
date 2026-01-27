@@ -34,6 +34,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     const undoStackRef = useRef<ImageData[]>([]);
     const lastPosRef = useRef<{ x: number, y: number } | null>(null);
     const rainbowHueRef = useRef<number>(0);
+    const stampHueRef = useRef<number>(0);
     const sourceCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const baseSizeRef = useRef<{ width: number, height: number } | null>(null);
 
@@ -142,6 +143,13 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         onHistoryChange(true);
     };
 
+    const getStampColor = () => {
+        if (!isRainbow || isEraser) return color;
+        const hue = stampHueRef.current;
+        stampHueRef.current = (stampHueRef.current + 36) % 360;
+        return `hsl(${hue}, 100%, 50%)`;
+    };
+
     const getPoint = (e: React.PointerEvent) => {
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
@@ -173,7 +181,8 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
 
             saveState();
             onDrawStart?.();
-            drawStamp(ctx, stampId, point.x, point.y, stampSize, color);
+            const stampColor = getStampColor();
+            drawStamp(ctx, stampId, point.x, point.y, stampSize, stampColor);
             renderFromSource(canvas);
             onDrawEnd?.();
             return;

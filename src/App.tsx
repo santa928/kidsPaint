@@ -77,13 +77,11 @@ function App() {
     setColor(c);
     setIsEraser(false);
     setIsRainbow(false);
-    setIsStampMode(false);
   };
 
   const handleRainbowSelect = () => {
     setIsRainbow(true);
     setIsEraser(false);
-    setIsStampMode(false);
   };
 
   const handleSelectStamp = (stampId: StampId) => {
