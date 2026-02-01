@@ -1,8 +1,25 @@
 .color-picker-container {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     flex: 1;
     min-width: 260px;
+    gap: 8px;
+}
+
+.color-groups {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 6px;
+    position: relative;
+}
+
+.color-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
 }
 
 .colors-scroll {
@@ -13,6 +30,7 @@
     padding: 4px;
     /* Hide scrollbar for cleaner look */
     scrollbar-width: none;
+    min-width: 0;
 }
 
 .colors-scroll::-webkit-scrollbar {
@@ -46,6 +64,65 @@
 }
 
 .color-chip.rainbow.selected {
+    border-color: #333;
+}
+
+.bg-toggle-btn {
+    height: 36px;
+    min-width: 56px;
+    padding: 0 10px;
+    border-radius: 18px;
+    border: 2px solid #ddd;
+    background: #fff;
+    color: #333;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.bg-toggle-btn.active {
+    border-color: #333;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.bg-popover {
+    position: absolute;
+    top: 52px;
+    right: 0;
+    background: #fff;
+    border-radius: 14px;
+    padding: 6px 8px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    z-index: 5;
+}
+
+.bg-colors-scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 2px 4px;
+    scrollbar-width: none;
+    min-width: 0;
+}
+
+.bg-colors-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.bg-color-chip {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.1s;
+}
+
+.bg-color-chip.selected {
+    transform: scale(1.1);
     border-color: #333;
 }
 

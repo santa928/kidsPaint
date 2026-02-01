@@ -4,6 +4,7 @@ Simple drawing app for kids with brush, rainbow, and stamps (shapes/animals/trai
 
 ## Usage
 - Pick a color from the top bar.
+- Change background color from the top bar palette.
 - Switch to Stamp mode and tap the canvas to place a stamp.
 - Use eraser, undo, or long-press clear-all as needed.
 

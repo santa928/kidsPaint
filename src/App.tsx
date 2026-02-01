@@ -25,6 +25,14 @@ function App() {
   const [isStampMode, setIsStampMode] = useState(false);
   const [selectedStamp, setSelectedStamp] = useState<StampId>('circle');
   const [isStampPanelOpen, setIsStampPanelOpen] = useState(false);
+  const [bgColor, setBgColor] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kids-oekaki-bg');
+      return saved ?? '#FFFFFF';
+    } catch {
+      return '#FFFFFF';
+    }
+  });
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
     try {
@@ -65,6 +73,12 @@ function App() {
     soundManager.setEnabled(soundEnabled);
   }, [soundEnabled]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('kids-oekaki-bg', bgColor);
+    } catch { }
+  }, [bgColor]);
+
   const toggleSound = () => {
     const newState = !soundEnabled;
     setSoundEnabled(newState);
@@ -82,6 +96,10 @@ function App() {
   const handleRainbowSelect = () => {
     setIsRainbow(true);
     setIsEraser(false);
+  };
+
+  const handleBackgroundSelect = (c: string) => {
+    setBgColor(c);
   };
 
   const handleSelectStamp = (stampId: StampId) => {
@@ -109,7 +127,10 @@ function App() {
     soundManager.playEndSound();
   };
 
-  const appStyle = { '--top-bar-height': `${topBarHeight}px` } as CSSProperties;
+  const appStyle = {
+    '--top-bar-height': `${topBarHeight}px`,
+    '--canvas-bg': bgColor,
+  } as CSSProperties;
 
   return (
     <div className={`app-container ${isStampPanelOpen ? 'stamp-panel-open' : ''}`} style={appStyle}>
@@ -119,6 +140,8 @@ function App() {
           onSelectColor={handleColorSelect}
           isRainbow={isRainbow}
           onSelectRainbow={handleRainbowSelect}
+          backgroundColor={bgColor}
+          onSelectBackground={handleBackgroundSelect}
           soundEnabled={soundEnabled}
           onToggleSound={toggleSound}
         />
