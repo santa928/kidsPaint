@@ -19,6 +19,9 @@ docker compose up --build
 
 https://santa928.github.io/kidsPaint/
 
+## PWA
+- GitHub Pages 上で PWA としてインストールできます（例: Chrome の「アプリをインストール」）。
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
