@@ -20,6 +20,7 @@ const COLORS = [
     { name: '黄', value: '#FFFF00' },
     { name: '橙', value: '#FFA500' },
     { name: '紫', value: '#800080' },
+    { name: 'ピンク', value: '#FF69B4' },
     { name: '白', value: '#FFFFFF' }, // Eraser might be separate, but white is useful
 ];
 
