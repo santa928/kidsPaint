@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './ColorPicker.css';
 
 interface ColorPickerProps {
@@ -46,6 +46,19 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     onToggleSound,
 }) => {
     const [isBgOpen, setIsBgOpen] = useState(false);
+
+    useEffect(() => {
+        const closePopover = () => setIsBgOpen(false);
+        const viewport = window.visualViewport;
+        window.addEventListener('resize', closePopover);
+        window.addEventListener('orientationchange', closePopover);
+        viewport?.addEventListener('resize', closePopover);
+        return () => {
+            window.removeEventListener('resize', closePopover);
+            window.removeEventListener('orientationchange', closePopover);
+            viewport?.removeEventListener('resize', closePopover);
+        };
+    }, []);
 
     return (
         <div className="color-picker-container">

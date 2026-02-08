@@ -58,11 +58,31 @@ function App() {
     update();
     if (!topBarRef.current) return;
     const observer = new ResizeObserver(update);
+    const viewport = window.visualViewport;
     observer.observe(topBarRef.current);
     window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    viewport?.addEventListener('resize', update);
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+      viewport?.removeEventListener('resize', update);
+    };
+  }, []);
+
+  useEffect(() => {
+    const closeTransientUi = () => {
+      setIsStampPanelOpen(false);
+    };
+    const viewport = window.visualViewport;
+    window.addEventListener('resize', closeTransientUi);
+    window.addEventListener('orientationchange', closeTransientUi);
+    viewport?.addEventListener('resize', closeTransientUi);
+    return () => {
+      window.removeEventListener('resize', closeTransientUi);
+      window.removeEventListener('orientationchange', closeTransientUi);
+      viewport?.removeEventListener('resize', closeTransientUi);
     };
   }, []);
 
