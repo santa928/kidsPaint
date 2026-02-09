@@ -6,6 +6,7 @@ Simple drawing app for kids with brush, rainbow, and stamps (shapes/animals/trai
 - Pick a color from the top bar.
 - Change background color from the top bar palette.
 - Switch to Stamp mode and tap the canvas to place a stamp.
+- Sound ON: stamp effects play randomly, and drawing plays a playful wavering melody.
 - Use eraser, undo, or long-press clear-all as needed.
 
 ## Development (Docker)

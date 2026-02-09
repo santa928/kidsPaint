@@ -37,11 +37,14 @@ export const ControlBar: React.FC<ControlBarProps> = ({
     const startPress = () => {
         if (isPressingRef.current) return;
         isPressingRef.current = true;
-        startTimeRef.current = Date.now();
+        startTimeRef.current = 0;
         setPressProgress(0);
 
-        const updateProgress = () => {
-            const elapsed = Date.now() - startTimeRef.current;
+        const updateProgress = (timestamp: number) => {
+            if (startTimeRef.current === 0) {
+                startTimeRef.current = timestamp;
+            }
+            const elapsed = timestamp - startTimeRef.current;
             const progress = Math.min((elapsed / LONG_PRESS_DURATION) * 100, 100);
             setPressProgress(progress);
 

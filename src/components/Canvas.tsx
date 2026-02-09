@@ -9,8 +9,9 @@ interface CanvasProps {
     isStampMode: boolean;
     stampId: StampId;
     onHistoryChange: (canUndo: boolean) => void;
-    onDrawStart?: () => void;
-    onDrawEnd?: () => void;
+    onStrokeStart?: () => void;
+    onStrokeEnd?: () => void;
+    onStampPlaced?: (stampId: StampId) => void;
 }
 
 export interface CanvasHandle {
@@ -26,8 +27,9 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     isStampMode,
     stampId,
     onHistoryChange,
-    onDrawStart,
-    onDrawEnd,
+    onStrokeStart,
+    onStrokeEnd,
+    onStampPlaced,
 }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -91,6 +93,21 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         return () => window.removeEventListener('resize', resize);
     }, []);
 
+    const saveState = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const source = ensureSourceCanvas(canvas.width, canvas.height);
+        const sourceCtx = source?.getContext('2d');
+        if (!source || !sourceCtx) return;
+        if (source.width <= 0 || source.height <= 0) return;
+
+        if (undoStackRef.current.length >= 20) {
+            undoStackRef.current.shift(); // Remove oldest
+        }
+        undoStackRef.current.push(sourceCtx.getImageData(0, 0, source.width, source.height));
+        onHistoryChange(true);
+    };
+
     // Expose methods
     useImperativeHandle(ref, () => ({
         undo: () => {
@@ -127,21 +144,6 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         }
     }));
 
-    const saveState = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const source = ensureSourceCanvas(canvas.width, canvas.height);
-        const sourceCtx = source?.getContext('2d');
-        if (!source || !sourceCtx) return;
-        if (source.width <= 0 || source.height <= 0) return;
-
-        if (undoStackRef.current.length >= 20) {
-            undoStackRef.current.shift(); // Remove oldest
-        }
-        undoStackRef.current.push(sourceCtx.getImageData(0, 0, source.width, source.height));
-        onHistoryChange(true);
-    };
-
     const getPoint = (e: React.PointerEvent) => {
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
@@ -172,10 +174,9 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
             const stampSize = getStampBaseSize(brushSize) * stampScale;
 
             saveState();
-            onDrawStart?.();
             drawStamp(ctx, stampId, point.x, point.y, stampSize, color, isRainbow && !isEraser);
             renderFromSource(canvas);
-            onDrawEnd?.();
+            onStampPlaced?.(stampId);
             return;
         }
 
@@ -187,7 +188,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         // Usually undo restores to state BEFORE the stroke. 
         // So yes, push current state to stack now.
 
-        onDrawStart?.();
+        onStrokeStart?.();
 
         // Draw a dot if just tapped?
         const canvas = canvasRef.current;
@@ -251,7 +252,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         if (isDrawing) {
             setIsDrawing(false);
             e.currentTarget.releasePointerCapture(e.pointerId);
-            onDrawEnd?.();
+            onStrokeEnd?.();
         }
     };
 

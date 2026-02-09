@@ -89,14 +89,18 @@ function App() {
   useEffect(() => {
     try {
       localStorage.setItem('kids-oekaki-sound', String(soundEnabled));
-    } catch { }
+    } catch {
+      // Ignore storage errors (private mode, quota, etc.)
+    }
     soundManager.setEnabled(soundEnabled);
   }, [soundEnabled]);
 
   useEffect(() => {
     try {
       localStorage.setItem('kids-oekaki-bg', bgColor);
-    } catch { }
+    } catch {
+      // Ignore storage errors (private mode, quota, etc.)
+    }
   }, [bgColor]);
 
   const toggleSound = () => {
@@ -138,13 +142,19 @@ function App() {
     setBrushSize(size);
   };
 
-  const handleDrawStart = () => {
+  const handleStrokeStart = () => {
+    void soundManager.unlock();
     soundManager.startDrawingSound();
   };
 
-  const handleDrawEnd = () => {
+  const handleStrokeEnd = () => {
     soundManager.stopDrawingSound();
-    soundManager.playEndSound();
+    soundManager.playStrokeEndSound();
+  };
+
+  const handleStampPlaced = () => {
+    void soundManager.unlock();
+    soundManager.playStampSound();
   };
 
   const appStyle = {
@@ -194,8 +204,9 @@ function App() {
           isStampMode={isStampMode}
           stampId={selectedStamp}
           onHistoryChange={setCanUndo}
-          onDrawStart={handleDrawStart}
-          onDrawEnd={handleDrawEnd}
+          onStrokeStart={handleStrokeStart}
+          onStrokeEnd={handleStrokeEnd}
+          onStampPlaced={handleStampPlaced}
         />
       </main>
 
