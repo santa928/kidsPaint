@@ -131,7 +131,6 @@ function App() {
     setIsStampMode(true);
     setIsStampPanelOpen(false);
     setIsEraser(false);
-    setIsRainbow(false);
   };
 
   const handleSelectDrawMode = () => {
