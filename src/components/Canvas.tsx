@@ -34,7 +34,6 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     const undoStackRef = useRef<ImageData[]>([]);
     const lastPosRef = useRef<{ x: number, y: number } | null>(null);
     const rainbowHueRef = useRef<number>(0);
-    const stampHueRef = useRef<number>(0);
     const sourceCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const baseSizeRef = useRef<{ width: number, height: number } | null>(null);
 
@@ -143,13 +142,6 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         onHistoryChange(true);
     };
 
-    const getStampColor = () => {
-        if (!isRainbow || isEraser) return color;
-        const hue = stampHueRef.current;
-        stampHueRef.current = (stampHueRef.current + 36) % 360;
-        return `hsl(${hue}, 100%, 50%)`;
-    };
-
     const getPoint = (e: React.PointerEvent) => {
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
@@ -181,8 +173,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
 
             saveState();
             onDrawStart?.();
-            const stampColor = getStampColor();
-            drawStamp(ctx, stampId, point.x, point.y, stampSize, stampColor);
+            drawStamp(ctx, stampId, point.x, point.y, stampSize, color, isRainbow && !isEraser);
             renderFromSource(canvas);
             onDrawEnd?.();
             return;
@@ -283,15 +274,19 @@ const drawStamp = (
     x: number,
     y: number,
     size: number,
-    color: string
+    color: string,
+    useRainbowGradient: boolean
 ) => {
     const shapeLine = Math.max(2, size * 0.12);
     const creatureLine = Math.max(1.2, size * 0.045);
     const creatureDetail = Math.max(0.8, size * 0.022);
+    const stampStyle: string | CanvasGradient = useRainbowGradient
+        ? createRainbowStampGradient(ctx, x, y, size)
+        : color;
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = color;
-    ctx.strokeStyle = color;
+    ctx.fillStyle = stampStyle;
+    ctx.strokeStyle = stampStyle;
     ctx.lineWidth = shapeLine;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -470,6 +465,28 @@ const drawStamp = (
     }
 
     ctx.restore();
+};
+
+const createRainbowStampGradient = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number
+) => {
+    const gradient = ctx.createLinearGradient(
+        x - size * 0.55,
+        y - size * 0.55,
+        x + size * 0.55,
+        y + size * 0.55
+    );
+    gradient.addColorStop(0.0, 'hsl(0, 100%, 50%)');
+    gradient.addColorStop(0.17, 'hsl(35, 100%, 50%)');
+    gradient.addColorStop(0.34, 'hsl(60, 100%, 50%)');
+    gradient.addColorStop(0.51, 'hsl(130, 100%, 45%)');
+    gradient.addColorStop(0.68, 'hsl(210, 100%, 50%)');
+    gradient.addColorStop(0.85, 'hsl(265, 100%, 55%)');
+    gradient.addColorStop(1.0, 'hsl(320, 100%, 55%)');
+    return gradient;
 };
 
 const getStampBaseSize = (brushSize: number) => {
