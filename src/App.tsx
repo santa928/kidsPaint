@@ -42,6 +42,18 @@ function App() {
       return false;
     }
   });
+  const [soundVolume, setSoundVolume] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kids-oekaki-volume');
+      if (saved === null) return 1.2;
+      const parsed = Number(saved);
+      if (!Number.isFinite(parsed)) return 1.2;
+      return Math.min(2, Math.max(0, parsed));
+    } catch {
+      return 1.2;
+    }
+  });
+  const [isSoundPanelOpen, setIsSoundPanelOpen] = useState(false);
 
   const [canUndo, setCanUndo] = useState(false);
 
@@ -74,6 +86,7 @@ function App() {
   useEffect(() => {
     const closeTransientUi = () => {
       setIsStampPanelOpen(false);
+      setIsSoundPanelOpen(false);
     };
     const viewport = window.visualViewport;
     window.addEventListener('resize', closeTransientUi);
@@ -97,18 +110,35 @@ function App() {
 
   useEffect(() => {
     try {
+      localStorage.setItem('kids-oekaki-volume', String(soundVolume));
+    } catch {
+      // Ignore storage errors (private mode, quota, etc.)
+    }
+    soundManager.setVolume(soundVolume);
+  }, [soundVolume]);
+
+  useEffect(() => {
+    try {
       localStorage.setItem('kids-oekaki-bg', bgColor);
     } catch {
       // Ignore storage errors (private mode, quota, etc.)
     }
   }, [bgColor]);
 
-  const toggleSound = () => {
-    const newState = !soundEnabled;
-    setSoundEnabled(newState);
-    if (newState) {
-      soundManager.unlock();
+  const handleSetSoundEnabled = (enabled: boolean) => {
+    setSoundEnabled(enabled);
+    if (enabled) {
+      void soundManager.unlock();
     }
+  };
+
+  const handleSetSoundVolume = (volume: number) => {
+    const clamped = Math.min(2, Math.max(0, volume));
+    setSoundVolume(clamped);
+  };
+
+  const toggleSoundPanel = () => {
+    setIsSoundPanelOpen((prev) => !prev);
   };
 
   const handleColorSelect = (c: string) => {
@@ -172,7 +202,11 @@ function App() {
           backgroundColor={bgColor}
           onSelectBackground={handleBackgroundSelect}
           soundEnabled={soundEnabled}
-          onToggleSound={toggleSound}
+          onSetSoundEnabled={handleSetSoundEnabled}
+          soundVolume={soundVolume}
+          onSetSoundVolume={handleSetSoundVolume}
+          isSoundPanelOpen={isSoundPanelOpen}
+          onToggleSoundPanel={toggleSoundPanel}
         />
         <StampPicker
           stamps={STAMPS}

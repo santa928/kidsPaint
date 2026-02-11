@@ -9,7 +9,11 @@ interface ColorPickerProps {
     backgroundColor: string;
     onSelectBackground: (color: string) => void;
     soundEnabled: boolean;
-    onToggleSound: () => void;
+    onSetSoundEnabled: (enabled: boolean) => void;
+    soundVolume: number;
+    onSetSoundVolume: (volume: number) => void;
+    isSoundPanelOpen: boolean;
+    onToggleSoundPanel: () => void;
 }
 
 const COLORS = [
@@ -43,9 +47,14 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     backgroundColor,
     onSelectBackground,
     soundEnabled,
-    onToggleSound,
+    onSetSoundEnabled,
+    soundVolume,
+    onSetSoundVolume,
+    isSoundPanelOpen,
+    onToggleSoundPanel,
 }) => {
     const [isBgOpen, setIsBgOpen] = useState(false);
+    const volumePercent = Math.round(Math.min(2, Math.max(0, soundVolume)) * 100);
 
     useEffect(() => {
         const closePopover = () => setIsBgOpen(false);
@@ -115,9 +124,41 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             </div>
 
             <div className="sound-control">
-                <button className={`sound-btn ${soundEnabled ? 'active' : ''}`} onClick={onToggleSound}>
+                <button
+                    type="button"
+                    className={`sound-btn ${isSoundPanelOpen ? 'active' : ''}`}
+                    onClick={onToggleSoundPanel}
+                    aria-label="音量設定"
+                    aria-expanded={isSoundPanelOpen}
+                    aria-controls="sound-popover"
+                >
                     {soundEnabled ? '🔊' : '🔇'}
                 </button>
+                {isSoundPanelOpen && (
+                    <div className="sound-popover" id="sound-popover">
+                        <button
+                            type="button"
+                            className={`sound-enabled-toggle ${soundEnabled ? 'active' : ''}`}
+                            onClick={() => onSetSoundEnabled(!soundEnabled)}
+                        >
+                            音を出す: {soundEnabled ? 'ON' : 'OFF'}
+                        </button>
+
+                        <label className="sound-volume-label" htmlFor="sound-volume-range">
+                            音量 {volumePercent}%
+                        </label>
+                        <input
+                            id="sound-volume-range"
+                            className="sound-volume-range"
+                            type="range"
+                            min={0}
+                            max={200}
+                            step={5}
+                            value={volumePercent}
+                            onChange={(event) => onSetSoundVolume(Number(event.target.value) / 100)}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

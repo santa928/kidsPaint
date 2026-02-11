@@ -1,5 +1,6 @@
 class SoundManager {
     private audioCtx: AudioContext | null = null;
+    private outputGain: GainNode | null = null;
     private drawLeadOsc: OscillatorNode | null = null;
     private drawHarmonyOsc: OscillatorNode | null = null;
     private drawLfoOsc: OscillatorNode | null = null;
@@ -10,6 +11,7 @@ class SoundManager {
     private sparkleTimer: number | null = null;
     private isUnlocked: boolean = false;
     private enabled: boolean = false;
+    private volume: number = 1.2;
 
     constructor() {
         // Lazy init
@@ -22,14 +24,36 @@ class SoundManager {
         }
     }
 
+    public setVolume(volume: number) {
+        const clamped = Math.min(2, Math.max(0, volume));
+        this.volume = clamped;
+        if (!this.audioCtx || !this.outputGain) return;
+
+        const now = this.audioCtx.currentTime;
+        this.outputGain.gain.cancelScheduledValues(now);
+        this.outputGain.gain.setValueAtTime(clamped, now);
+    }
+
     private initCtx() {
         if (!this.audioCtx) {
             const Ctx = window.AudioContext
                 || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
             if (Ctx) {
                 this.audioCtx = new Ctx();
+                this.outputGain = this.audioCtx.createGain();
+                this.outputGain.gain.setValueAtTime(this.volume, this.audioCtx.currentTime);
+                this.outputGain.connect(this.audioCtx.destination);
             }
         }
+    }
+
+    private getOutputGain(ctx: AudioContext) {
+        if (!this.outputGain) {
+            this.outputGain = ctx.createGain();
+            this.outputGain.gain.setValueAtTime(this.volume, ctx.currentTime);
+            this.outputGain.connect(ctx.destination);
+        }
+        return this.outputGain;
     }
 
     public async unlock() {
@@ -100,7 +124,7 @@ class SoundManager {
         harmonyOsc.connect(harmonyGain);
         leadGain.connect(masterGain);
         harmonyGain.connect(masterGain);
-        masterGain.connect(ctx.destination);
+        masterGain.connect(this.getOutputGain(ctx));
 
         leadOsc.start(now);
         harmonyOsc.start(now);
@@ -153,7 +177,7 @@ class SoundManager {
         sparkGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
 
         spark.connect(sparkGain);
-        sparkGain.connect(ctx.destination);
+        sparkGain.connect(this.getOutputGain(ctx));
         spark.start(now);
         spark.stop(now + 0.13);
 
@@ -244,7 +268,7 @@ class SoundManager {
         gain.gain.exponentialRampToValueAtTime(0.0001, startTime + release);
 
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(this.getOutputGain(ctx));
         osc.start(startTime);
         osc.stop(startTime + release + 0.03);
 
