@@ -1,52 +1,76 @@
 .stamp-picker-container {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-    min-width: 260px;
+    align-items: center;
+    gap: 8px;
 }
 
-.stamp-header {
+.stamp-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: wrap;
 }
 
-.stamp-title {
+.stamp-toggle-btn,
+.stamp-draw-btn {
+    height: 36px;
+    border-radius: 18px;
+    border: 2px solid #ddd;
+    background: #fff;
+    color: #333;
     font-size: 12px;
-    color: #555;
     font-weight: 600;
+    cursor: pointer;
 }
 
-.stamps-scroll {
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    gap: 10px;
-    padding: 8px 10px;
-    scrollbar-width: none;
+.stamp-toggle-btn {
+    min-width: 56px;
+    padding: 0 10px;
+    white-space: nowrap;
+}
+
+.stamp-draw-btn {
+    min-width: 40px;
+    padding: 0 10px;
+}
+
+.stamp-toggle-btn.active,
+.stamp-draw-btn.active {
+    border-color: #333;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.stamp-popover {
     position: fixed;
     top: calc(var(--top-bar-height, 60px) + 6px);
     left: 10px;
     right: 10px;
-    max-width: calc(100vw - 20px);
-    background: #ffffff;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-    z-index: 30;
-    pointer-events: auto;
+    background: #fff;
+    border-radius: 14px;
+    padding: 6px 8px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    z-index: 35;
+}
+
+.stamp-items-scroll {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 10px;
+    padding: 2px 4px;
+    scrollbar-width: none;
+    min-width: 0;
+    width: 100%;
     touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+    overscroll-behavior-y: none;
 }
 
-.stamps-scroll::-webkit-scrollbar {
+.stamp-items-scroll::-webkit-scrollbar {
     display: none;
 }
 
-.stamp-chip {
+.stamp-item-chip {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -55,33 +79,16 @@
     height: 44px;
     border-radius: 12px;
     border: 2px solid #e0e0e0;
-    background: #ffffff;
+    background: #fff;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
     padding: 6px 8px;
     cursor: pointer;
     flex-shrink: 0;
 }
 
-.stamp-chip.selected {
+.stamp-item-chip.selected {
     border-color: #333;
     transform: scale(1.02);
-}
-
-.stamp-chip.draw-mode {
-    min-width: 44px;
-    height: 36px;
-    padding: 2px 6px;
-}
-
-.stamp-chip.stamp-toggle {
-    min-width: 72px;
-    height: 36px;
-    padding: 2px 8px;
-    font-size: 12px;
-}
-
-.stamp-chip.stamp-toggle.open {
-    border-color: #333;
 }
 
 .stamp-icon {

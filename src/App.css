@@ -29,20 +29,6 @@
   z-index: 0;
 }
 
-.app-container.stamp-panel-open .canvas-area {
-  pointer-events: none;
-}
-
-.stamp-overlay-mask {
-  position: fixed;
-  top: var(--top-bar-height, 60px);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.01);
-  z-index: 30;
-}
-
 .bottom-bar {
   flex: 0 0 auto;
   padding: 10px;

@@ -162,7 +162,7 @@ function App() {
   } as CSSProperties;
 
   return (
-    <div className={`app-container ${isStampPanelOpen ? 'stamp-panel-open' : ''}`} style={appStyle}>
+    <div className="app-container" style={appStyle}>
       <header className="top-bar" ref={topBarRef}>
         <ColorPicker
           selectedColor={color}
@@ -184,14 +184,6 @@ function App() {
           onToggleOpen={() => setIsStampPanelOpen((prev) => !prev)}
         />
       </header>
-
-      {isStampPanelOpen && (
-        <div
-          className="stamp-overlay-mask"
-          onClick={() => setIsStampPanelOpen(false)}
-          aria-hidden="true"
-        />
-      )}
 
       <main className="canvas-area">
         <Canvas

@@ -28,19 +28,20 @@ export const StampPicker: React.FC<StampPickerProps> = ({
     onToggleOpen,
 }) => {
     return (
-        <div className={`stamp-picker-container ${isOpen ? 'open' : 'closed'}`}>
-            <div className="stamp-header">
-                <span className="stamp-title">スタンプ</span>
+        <div className="stamp-picker-container">
+            <div className="stamp-row">
                 <button
-                    className={`stamp-chip stamp-toggle ${isOpen ? 'open' : ''}`}
+                    type="button"
+                    className={`stamp-toggle-btn ${isOpen ? 'active' : ''}`}
                     onClick={onToggleOpen}
                     aria-expanded={isOpen}
-                    aria-label={isOpen ? 'スタンプ一覧を閉じる' : 'スタンプ一覧を開く'}
+                    aria-controls="stamp-popover"
                 >
-                    {isOpen ? '閉じる ▲' : '開く ▼'}
+                    スタンプ
                 </button>
                 <button
-                    className={`stamp-chip draw-mode ${!isStampMode ? 'selected' : ''}`}
+                    type="button"
+                    className={`stamp-draw-btn ${!isStampMode ? 'active' : ''}`}
                     onClick={onSelectDrawMode}
                     aria-label="おえかきモード"
                 >
@@ -48,18 +49,21 @@ export const StampPicker: React.FC<StampPickerProps> = ({
                 </button>
             </div>
             {isOpen && (
-                <div className="stamps-scroll">
-                    {stamps.map((stamp) => (
-                        <button
-                            key={stamp.id}
-                            className={`stamp-chip ${isStampMode && selectedStamp === stamp.id ? 'selected' : ''}`}
-                            onClick={() => onSelectStamp(stamp.id)}
-                            aria-label={stamp.label}
-                        >
-                            <span className="stamp-icon">{stamp.icon}</span>
-                            <span className="stamp-label">{stamp.label}</span>
-                        </button>
-                    ))}
+                <div className="stamp-popover" id="stamp-popover">
+                    <div className="stamp-items-scroll">
+                        {stamps.map((stamp) => (
+                            <button
+                                key={stamp.id}
+                                type="button"
+                                className={`stamp-item-chip ${isStampMode && selectedStamp === stamp.id ? 'selected' : ''}`}
+                                onClick={() => onSelectStamp(stamp.id)}
+                                aria-label={stamp.label}
+                            >
+                                <span className="stamp-icon">{stamp.icon}</span>
+                                <span className="stamp-label">{stamp.label}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
