@@ -1,4 +1,5 @@
 class SoundManager {
+    private static readonly OUTPUT_BOOST = 1.5;
     private audioCtx: AudioContext | null = null;
     private outputGain: GainNode | null = null;
     private drawLeadOsc: OscillatorNode | null = null;
@@ -31,7 +32,11 @@ class SoundManager {
 
         const now = this.audioCtx.currentTime;
         this.outputGain.gain.cancelScheduledValues(now);
-        this.outputGain.gain.setValueAtTime(clamped, now);
+        this.outputGain.gain.setValueAtTime(this.toEffectiveOutputGain(clamped), now);
+    }
+
+    private toEffectiveOutputGain(volume: number) {
+        return Math.min(3, Math.max(0, volume * SoundManager.OUTPUT_BOOST));
     }
 
     private initCtx() {
@@ -41,7 +46,10 @@ class SoundManager {
             if (Ctx) {
                 this.audioCtx = new Ctx();
                 this.outputGain = this.audioCtx.createGain();
-                this.outputGain.gain.setValueAtTime(this.volume, this.audioCtx.currentTime);
+                this.outputGain.gain.setValueAtTime(
+                    this.toEffectiveOutputGain(this.volume),
+                    this.audioCtx.currentTime,
+                );
                 this.outputGain.connect(this.audioCtx.destination);
             }
         }
@@ -50,7 +58,7 @@ class SoundManager {
     private getOutputGain(ctx: AudioContext) {
         if (!this.outputGain) {
             this.outputGain = ctx.createGain();
-            this.outputGain.gain.setValueAtTime(this.volume, ctx.currentTime);
+            this.outputGain.gain.setValueAtTime(this.toEffectiveOutputGain(this.volume), ctx.currentTime);
             this.outputGain.connect(ctx.destination);
         }
         return this.outputGain;
