@@ -1,5 +1,5 @@
 class SoundManager {
-    private static readonly OUTPUT_BOOST = 1.5;
+    private static readonly OUTPUT_BOOST = 2;
     private audioCtx: AudioContext | null = null;
     private outputGain: GainNode | null = null;
     private drawLeadOsc: OscillatorNode | null = null;
