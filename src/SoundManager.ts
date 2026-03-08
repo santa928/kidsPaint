@@ -1,5 +1,5 @@
 class SoundManager {
-    private static readonly OUTPUT_BOOST = 2;
+    private static readonly OUTPUT_BOOST = 4;
     private audioCtx: AudioContext | null = null;
     private outputGain: GainNode | null = null;
     private drawLeadOsc: OscillatorNode | null = null;
@@ -36,7 +36,7 @@ class SoundManager {
     }
 
     private toEffectiveOutputGain(volume: number) {
-        return Math.min(3, Math.max(0, volume * SoundManager.OUTPUT_BOOST));
+        return Math.min(6, Math.max(0, volume * SoundManager.OUTPUT_BOOST));
     }
 
     private initCtx() {
