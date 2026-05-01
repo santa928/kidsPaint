@@ -185,8 +185,6 @@ function App() {
     soundManager.playEraserSound(next);
     setIsEraser(next);
     setIsStampMode(false);
-    // Disable rainbow while erasing so the tool state remains unambiguous.
-    if (next) setIsRainbow(false);
   };
 
   const handleUndo = () => {
