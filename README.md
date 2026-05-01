@@ -7,12 +7,17 @@ Simple drawing app for kids with brush, rainbow, and stamps (shapes/animals/trai
 - Change background color from the top bar palette.
 - Switch to Stamp mode and tap the canvas to place a stamp.
 - Tap 🔊/🔇 to open sound settings, then toggle sound ON/OFF and adjust volume (0-200%, default 120%).
-- Sound ON: stamp effects play randomly, and drawing plays a playful wavering melody.
+- Sound ON: drawing, stamps, color changes, tools, undo, and clear-all play varied magical effects.
 - Use eraser, undo, or long-press clear-all as needed.
 
 ## Development (Docker)
 ```sh
 docker compose up --build
+```
+
+Regenerate bundled sound effects:
+```sh
+docker compose run --rm web npm run generate:sounds
 ```
 
 # React + TypeScript + Vite

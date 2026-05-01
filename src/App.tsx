@@ -142,17 +142,23 @@ function App() {
   };
 
   const handleColorSelect = (c: string) => {
+    void soundManager.unlock();
+    soundManager.playColorSelectSound();
     setColor(c);
     setIsEraser(false);
     setIsRainbow(false);
   };
 
   const handleRainbowSelect = () => {
+    void soundManager.unlock();
+    soundManager.playRainbowSelectSound();
     setIsRainbow(true);
     setIsEraser(false);
   };
 
   const handleBackgroundSelect = (c: string) => {
+    void soundManager.unlock();
+    soundManager.playColorSelectSound();
     setBgColor(c);
   };
 
@@ -168,7 +174,31 @@ function App() {
   };
 
   const handleBrushSizeChange = (size: number) => {
+    void soundManager.unlock();
+    soundManager.playBrushSizeSound(size);
     setBrushSize(size);
+  };
+
+  const handleToggleEraser = () => {
+    const next = !isEraser;
+    void soundManager.unlock();
+    soundManager.playEraserSound(next);
+    setIsEraser(next);
+    setIsStampMode(false);
+    // Disable rainbow while erasing so the tool state remains unambiguous.
+    if (next) setIsRainbow(false);
+  };
+
+  const handleUndo = () => {
+    void soundManager.unlock();
+    soundManager.playUndoSound();
+    canvasRef.current?.undo();
+  };
+
+  const handleClearAll = () => {
+    canvasRef.current?.clear();
+    void soundManager.unlock();
+    soundManager.playClearAllSound();
   };
 
   const handleStrokeStart = () => {
@@ -181,9 +211,9 @@ function App() {
     soundManager.playStrokeEndSound();
   };
 
-  const handleStampPlaced = () => {
+  const handleStampPlaced = (stampId: StampId) => {
     void soundManager.unlock();
-    soundManager.playStampSound();
+    soundManager.playStampSound(stampId);
   };
 
   const appStyle = {
@@ -240,18 +270,10 @@ function App() {
           brushSize={brushSize}
           setBrushSize={handleBrushSizeChange}
           isEraser={isEraser}
-          toggleEraser={() => {
-            const next = !isEraser;
-            setIsEraser(next);
-            setIsStampMode(false);
-            // Disable rainbow if eraser on, or keep state? Usually eraser overrides color.
-            // If we toggle eraser off, we return to previous state? 
-            // Simplification: Turn off rainbow when Eraser is activated.
-            if (next) setIsRainbow(false);
-          }}
-          onUndo={() => canvasRef.current?.undo()}
+          toggleEraser={handleToggleEraser}
+          onUndo={handleUndo}
           canUndo={canUndo}
-          onClearAll={() => canvasRef.current?.clear()}
+          onClearAll={handleClearAll}
         />
       </footer>
     </div>
