@@ -615,15 +615,16 @@ class SoundManager {
     }
 
     /** Plays a rounded pop whose pitch follows the selected brush size. */
+    /** Match the three artwork-space brush sizes with distinct sound pitches. */
     public playBrushSizeSound(size: number) {
         const ctx = this.getPlayableContext();
         if (!ctx) return;
 
         const now = ctx.currentTime;
-        const base = size <= 4 ? 520 : size <= 8 ? 380 : 260;
-        const sampleGroup = size <= 4
+        const base = size <= 8 ? 520 : size <= 16 ? 380 : 260;
+        const sampleGroup = size <= 8
             ? SAMPLE_GROUPS.brushSmall
-            : size <= 8
+            : size <= 16
                 ? SAMPLE_GROUPS.brushMedium
                 : SAMPLE_GROUPS.brushBig;
         if (this.playSample(ctx, sampleGroup, { gain: 0.54, jitter: 0.05 })) return;

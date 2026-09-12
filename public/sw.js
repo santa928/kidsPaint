@@ -1,62 +1,29 @@
-const CACHE_NAME = 'kidsPaint-v1'
-const CORE_ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg']
+/* Build replaces both tokens with the exact files and content hash in dist. */
+const CACHE_NAME = 'kidsPaint-v2-__BUILD_ID__';
+const PRECACHE = __PRECACHE_MANIFEST__;
+const ASSETS = new Set(PRECACHE.map(path => new URL(path, self.registration.scope).href));
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(CORE_ASSETS)
-    }),
-  )
-  self.skipWaiting()
-})
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll([...ASSETS])));
+  // Let an open drawing session finish before the new worker activates.
+});
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)),
-      )
-    }),
-  )
-  self.clients.claim()
-})
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key.startsWith('kidsPaint-') && key !== CACHE_NAME).map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
 
-self.addEventListener('fetch', (event) => {
-  const { request } = event
-  if (request.method !== 'GET') return
-
-  const url = new URL(request.url)
-  if (url.origin !== self.location.origin) return
-
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  if (request.method !== 'GET' || !request.url.startsWith(self.registration.scope)) return;
   if (request.mode === 'navigate') {
-    event.respondWith(
-      (async () => {
-        try {
-          const response = await fetch(request)
-          const cache = await caches.open(CACHE_NAME)
-          cache.put(request, response.clone())
-          return response
-        } catch (error) {
-          const cache = await caches.open(CACHE_NAME)
-          const cached = await cache.match('./index.html')
-          return cached || Response.error()
-        }
-      })(),
-    )
-    return
+    // Pair this worker's HTML with its precached hashed assets, including offline starts.
+    event.respondWith(caches.open(CACHE_NAME).then(async cache => (await cache.match(new URL('index.html', self.registration.scope).href)) || fetch(request)));
+    return;
   }
-
-  event.respondWith(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME)
-      const cached = await cache.match(request)
-      if (cached) return cached
-
-      const response = await fetch(request)
-      if (response && response.status === 200) {
-        cache.put(request, response.clone())
-      }
-      return response
-    })(),
-  )
-})
+  if (!ASSETS.has(request.url)) return;
+  event.respondWith(caches.open(CACHE_NAME).then(async cache => (await cache.match(request)) || fetch(request)));
+});

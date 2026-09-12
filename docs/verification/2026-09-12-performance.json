@@ -1,0 +1,17 @@
+{
+  "scenario": "500 synthetic strokes / 60000 points, 20% rainbow; then 120 native pointer moves",
+  "environment": "headless Chromium, Linux Docker, DPR 2; not an iPad",
+  "restorationMs": 650,
+  "saveMs": 80,
+  "burst": {
+    "taps": 40,
+    "totalMs": 548,
+    "afterLastTapMs": 142
+  },
+  "frames": 129,
+  "frameP95Ms": 16.799999999999727,
+  "frameMaxMs": 33.40000000000009,
+  "longTasksMs": [
+    56
+  ]
+}

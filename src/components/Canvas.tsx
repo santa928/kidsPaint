@@ -1,497 +1,253 @@
-import React, { useRef, useEffect, useState, useImperativeHandle, forwardRef } from 'react';
+import { useCallback, useRef, useLayoutEffect, useEffect, useImperativeHandle, forwardRef } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { StampId } from '../types';
+import type { DrawingDocument, DrawingTool } from '../drawing/types';
+import { DrawingSession } from '../drawing/session';
+import { fitViewport, pointerToWorld, type DrawingViewport } from '../drawing/viewport';
+import { visibleDrawingBounds } from '../drawing/visibleBounds';
+import type { DrawingRect } from '../drawing/geometry';
+import { drawStrokePoint, renderDocument, renderOperation } from '../drawing/renderer';
+import { drawingToPng } from '../artworkExport';
 
 interface CanvasProps {
+    document: DrawingDocument;
+    tool: DrawingTool;
     color: string;
     brushSize: number;
-    isEraser: boolean;
     isRainbow: boolean;
-    isStampMode: boolean;
     stampId: StampId;
+    backgroundColor: string;
+    onChange: (drawing: DrawingDocument) => void;
     onHistoryChange: (canUndo: boolean) => void;
     onStrokeStart?: () => void;
     onStrokeEnd?: () => void;
     onStampPlaced?: (stampId: StampId) => void;
 }
 
+/** Parent actions always finalize a current gesture before changing or exporting it. */
 export interface CanvasHandle {
     undo: () => void;
     clear: () => void;
+    finishStroke: () => void;
+    exportPng: (backgroundColor: string) => Promise<Blob>;
 }
 
-export const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
+/** A full-viewport drawing surface with a stable, uniform artwork camera. */
+export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas({
+    document: drawing,
+    tool,
     color,
     brushSize,
-    isEraser,
     isRainbow,
-    isStampMode,
     stampId,
+    backgroundColor,
+    onChange,
     onHistoryChange,
     onStrokeStart,
     onStrokeEnd,
     onStampPlaced,
-}, ref) => {
+}, ref) {
+    const stageRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [isDrawing, setIsDrawing] = useState(false);
-    const undoStackRef = useRef<ImageData[]>([]);
-    const lastPosRef = useRef<{ x: number, y: number } | null>(null);
-    const rainbowHueRef = useRef<number>(0);
-    const sourceCanvasRef = useRef<HTMLCanvasElement | null>(null);
-    const baseSizeRef = useRef<{ width: number, height: number } | null>(null);
+    const appliedLayoutRef = useRef<{ fit: DrawingViewport; bounds: DrawingRect } | null>(null);
+    const clearViewsRef = useRef(new WeakMap<DrawingDocument, { previous: DrawingDocument; fit: DrawingViewport; bounds: DrawingRect }>());
+    const sessionRef = useRef(new DrawingSession(drawing));
+    const callbacksRef = useRef({ onChange, onHistoryChange, onStrokeStart, onStrokeEnd, onStampPlaced });
 
-    const ensureSourceCanvas = (displayWidth: number, displayHeight: number) => {
-        if (displayWidth <= 0 || displayHeight <= 0) return null;
-        if (!baseSizeRef.current) {
-            baseSizeRef.current = { width: displayWidth, height: displayHeight };
-        }
-        let source = sourceCanvasRef.current;
-        if (!source) {
-            source = document.createElement('canvas');
-            sourceCanvasRef.current = source;
-        }
-        const base = baseSizeRef.current;
-        if (source.width !== base.width || source.height !== base.height) {
-            source.width = base.width;
-            source.height = base.height;
-        }
-        return source;
-    };
+    useLayoutEffect(() => {
+        callbacksRef.current = { onChange, onHistoryChange, onStrokeStart, onStrokeEnd, onStampPlaced };
+    }, [onChange, onHistoryChange, onStrokeStart, onStrokeEnd, onStampPlaced]);
 
-    const renderFromSource = (displayCanvas: HTMLCanvasElement) => {
-        const source = ensureSourceCanvas(displayCanvas.width, displayCanvas.height);
-        if (!source) return;
-        const ctx = displayCanvas.getContext('2d');
-        if (!ctx) return;
-        ctx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
-        ctx.drawImage(source, 0, 0, displayCanvas.width, displayCanvas.height);
-    };
-
-    // Initialize canvas size
-    useEffect(() => {
+    /** Restore finalized and in-flight content after resizing or undoing. */
+    const repaint = useCallback(() => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const resize = () => {
-            const parent = canvas.parentElement;
-            if (parent) {
-                const nextWidth = parent.clientWidth;
-                const nextHeight = parent.clientHeight;
-                if (nextWidth <= 0 || nextHeight <= 0) return;
-                if (canvas.width === nextWidth && canvas.height === nextHeight) return;
-
-                canvas.width = nextWidth;
-                canvas.height = nextHeight;
-                renderFromSource(canvas);
-                // Fill white initially or just rely on CSS background? 
-                // If we want to save/export, we might need actual white pixels, 
-                // but for now CSS background is sufficient for display.
-                // However, for eraser (destination-out) to work visually, CSS background is key.
-            }
-        };
-        resize();
-        window.addEventListener('resize', resize);
-        return () => window.removeEventListener('resize', resize);
+        const ctx = canvas?.getContext('2d');
+        const camera = appliedLayoutRef.current?.fit;
+        if (!canvas || !ctx || !camera) return;
+        const session = sessionRef.current;
+        const dx = canvas.width / camera.width, dy = canvas.height / camera.height;
+        ctx.setTransform(dx * camera.scale, 0, 0, dy * camera.scale, dx * camera.offsetX, dy * camera.offsetY);
+        renderDocument(ctx, session.document);
+        if (session.activeOperation) renderOperation(ctx, session.activeOperation);
     }, []);
 
-    const saveState = () => {
+    /** Emit only finalized changes and their corresponding undo availability. */
+    const publish = useCallback((next: DrawingDocument | null) => {
+        if (!next) return;
+        callbacksRef.current.onChange(next);
+        callbacksRef.current.onHistoryChange(sessionRef.current.canUndo);
+    }, []);
+
+    /** Release ownership before capture callbacks can fire and commit at most once. */
+    const finish = useCallback((pointerId?: number) => {
+        const session = sessionRef.current;
+        const ownedPointer = session.activePointerId;
+        const wasStroke = session.activeOperation?.kind === 'stroke';
+        const next = session.finish(pointerId);
+        if (!next) return;
         const canvas = canvasRef.current;
-        if (!canvas) return;
-        const source = ensureSourceCanvas(canvas.width, canvas.height);
-        const sourceCtx = source?.getContext('2d');
-        if (!source || !sourceCtx) return;
-        if (source.width <= 0 || source.height <= 0) return;
-
-        if (undoStackRef.current.length >= 20) {
-            undoStackRef.current.shift(); // Remove oldest
+        if (canvas && ownedPointer !== null && canvas.hasPointerCapture(ownedPointer)) {
+            canvas.releasePointerCapture(ownedPointer);
         }
-        undoStackRef.current.push(sourceCtx.getImageData(0, 0, source.width, source.height));
-        onHistoryChange(true);
-    };
+        if (wasStroke) callbacksRef.current.onStrokeEnd?.();
+        publish(next);
+    }, [publish]);
 
-    // Expose methods
+    /** Consume coalesced samples without replaying the entire document per pointer move. */
+    const appendPointerSamples = useCallback((event: PointerEvent) => {
+        const canvas = canvasRef.current;
+        const session = sessionRef.current;
+        if (!canvas || event.pointerId !== session.activePointerId || session.activeOperation?.kind !== 'stroke') return;
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.getBoundingClientRect();
+        const camera = appliedLayoutRef.current?.fit;
+        if (!camera) return;
+        const coalesced = event.getCoalescedEvents?.() ?? [];
+        const samples = coalesced.length > 0 ? coalesced : [event];
+        for (const sample of samples) {
+            const point = pointerToWorld(sample.clientX, sample.clientY, rect, camera);
+            if (!point || !session.move(event.pointerId, point)) continue;
+            if (ctx) drawStrokePoint(ctx, session.activeOperation, session.activeOperation.points.length - 1, session.hue);
+        }
+    }, []);
+
+    useLayoutEffect(() => {
+        // Local publications already match this reference; external replacements start a new history.
+        if (drawing !== sessionRef.current.document) {
+            sessionRef.current = new DrawingSession(drawing);
+            const layout = appliedLayoutRef.current;
+            if (layout) layout.fit = fitViewport(layout.bounds.width, layout.bounds.height, visibleDrawingBounds(drawing), window.devicePixelRatio);
+            callbacksRef.current.onHistoryChange(false);
+            repaint();
+        }
+    }, [drawing, repaint]);
+
+    useLayoutEffect(() => {
+        const stage = stageRef.current;
+        const canvas = canvasRef.current;
+        if (!stage || !canvas) return;
+        /** Finalize the old coordinate sequence before changing the full-stage camera. */
+        const resize = () => {
+            const bounds = stage.getBoundingClientRect();
+            if (bounds.width <= 0 || bounds.height <= 0) return;
+            const previous = appliedLayoutRef.current;
+            const density = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+            if (previous && previous.fit.pixelWidth === Math.round(bounds.width * density) && previous.fit.pixelHeight === Math.round(bounds.height * density)
+                && previous.bounds.left === bounds.left && previous.bounds.top === bounds.top
+                && previous.bounds.width === bounds.width && previous.bounds.height === bounds.height) return;
+            finish();
+            const fit = fitViewport(bounds.width, bounds.height, visibleDrawingBounds(sessionRef.current.document), window.devicePixelRatio);
+            appliedLayoutRef.current = { fit, bounds };
+            canvas.dataset.camera = JSON.stringify({ scale: fit.scale, offsetX: fit.offsetX, offsetY: fit.offsetY });
+            canvas.style.width = `${fit.width}px`;
+            canvas.style.height = `${fit.height}px`;
+            if (canvas.width !== fit.pixelWidth || canvas.height !== fit.pixelHeight) {
+                canvas.width = fit.pixelWidth;
+                canvas.height = fit.pixelHeight;
+            }
+            repaint();
+        };
+        resize();
+        const observer = new ResizeObserver(resize);
+        observer.observe(stage);
+        window.addEventListener('resize', resize);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', resize);
+        };
+    }, [finish, repaint]);
+
+    useEffect(() => {
+        callbacksRef.current.onHistoryChange(sessionRef.current.canUndo);
+        const handleBlur = () => finish();
+        const handleVisibility = () => { if (document.visibilityState === 'hidden') finish(); };
+        const handlePointerUp = (event: PointerEvent) => { appendPointerSamples(event); finish(event.pointerId); };
+        const handlePointerCancel = (event: PointerEvent) => finish(event.pointerId);
+        window.addEventListener('blur', handleBlur);
+        window.addEventListener('pointerup', handlePointerUp);
+        window.addEventListener('pointercancel', handlePointerCancel);
+        document.addEventListener('visibilitychange', handleVisibility);
+        return () => {
+            window.removeEventListener('blur', handleBlur);
+            window.removeEventListener('pointerup', handlePointerUp);
+            window.removeEventListener('pointercancel', handlePointerCancel);
+            document.removeEventListener('visibilitychange', handleVisibility);
+            finish();
+        };
+    }, [appendPointerSamples, finish]);
+
     useImperativeHandle(ref, () => ({
         undo: () => {
-            const canvas = canvasRef.current;
-            if (!canvas || undoStackRef.current.length === 0) return;
-            const source = ensureSourceCanvas(canvas.width, canvas.height);
-            const sourceCtx = source?.getContext('2d');
-            if (!source || !sourceCtx) return;
-
-            const previous = undoStackRef.current.pop();
-            if (previous) {
-                sourceCtx.clearRect(0, 0, source.width, source.height);
-                sourceCtx.putImageData(previous, 0, 0);
-                renderFromSource(canvas);
+            finish();
+            const clearedView = clearViewsRef.current.get(sessionRef.current.document);
+            const next = sessionRef.current.undo();
+            const layout = appliedLayoutRef.current;
+            // A clear resets the view; undoing that clear restores the previous view as well.
+            // Other undos keep the paper stationary, so removing a dot never moves the remaining ink.
+            if (next && clearedView?.previous === next && layout) {
+                layout.fit = layout.bounds.width === clearedView.bounds.width && layout.bounds.height === clearedView.bounds.height
+                    ? clearedView.fit : fitViewport(layout.bounds.width, layout.bounds.height, visibleDrawingBounds(next), window.devicePixelRatio);
+                if (canvasRef.current) canvasRef.current.dataset.camera = JSON.stringify(layout.fit);
             }
-            onHistoryChange(undoStackRef.current.length > 0);
+            publish(next); repaint();
         },
         clear: () => {
-            const canvas = canvasRef.current;
-            if (!canvas) return;
-            const source = ensureSourceCanvas(canvas.width, canvas.height);
-            const sourceCtx = source?.getContext('2d');
-            if (!source || !sourceCtx) return;
+            finish();
+            const previous = sessionRef.current.document;
+            const next = sessionRef.current.clear();
+            const layout = appliedLayoutRef.current;
+            if (next && layout) {
+                clearViewsRef.current.set(next, { previous, ...layout });
+                layout.fit = fitViewport(layout.bounds.width, layout.bounds.height, visibleDrawingBounds(next), window.devicePixelRatio);
+                if (canvasRef.current) canvasRef.current.dataset.camera = JSON.stringify(layout.fit);
+            }
+            publish(next); repaint();
+        },
+        finishStroke: () => finish(),
+        exportPng: async (paperColor: string) => {
+            finish();
+            return drawingToPng(sessionRef.current.document, paperColor);
+        },
+    }), [finish, publish, repaint]);
 
-            saveState(); // Save before clear? Issue says "MVP: Can't undo clear". 
-            // But implementation note said "Clear stack after clear" in one option.
-            // Wait, issue "8. ぜんぶけす" > "MVP案：クリア後は戻せない（誤操作防止を優先）"
-            // So we clear stack.
-            undoStackRef.current = [];
-            onHistoryChange(false);
-
-            sourceCtx.clearRect(0, 0, source.width, source.height);
-            renderFromSource(canvas);
-        }
-    }));
-
-    const getPoint = (e: React.PointerEvent) => {
-        const canvas = canvasRef.current;
-        if (!canvas) return { x: 0, y: 0 };
-        const rect = canvas.getBoundingClientRect();
-        const source = ensureSourceCanvas(canvas.width, canvas.height);
-        if (!source) return { x: 0, y: 0 };
-        if (rect.width === 0 || rect.height === 0) return { x: 0, y: 0 };
-        const scaleX = source.width / rect.width;
-        const scaleY = source.height / rect.height;
-        return {
-            x: (e.clientX - rect.left) * scaleX,
-            y: (e.clientY - rect.top) * scaleY
-        };
-    };
-
-    const handlePointerDown = (e: React.PointerEvent) => {
-        if (isStampMode) {
-            const canvas = canvasRef.current;
-            if (!canvas) return;
-            const source = ensureSourceCanvas(canvas.width, canvas.height);
-            const ctx = source?.getContext('2d');
-            if (!source || !ctx) return;
-
-            const point = getPoint(e);
-            const scaleX = source.width / canvas.width;
-            const scaleY = source.height / canvas.height;
-            const stampScale = (scaleX + scaleY) / 2;
-            const stampSize = getStampBaseSize(brushSize) * stampScale;
-
-            saveState();
-            drawStamp(ctx, stampId, point.x, point.y, stampSize, color, isRainbow && !isEraser);
-            renderFromSource(canvas);
-            onStampPlaced?.(stampId);
-            return;
-        }
-
-        e.currentTarget.setPointerCapture(e.pointerId);
-        setIsDrawing(true);
-        lastPosRef.current = getPoint(e);
-
-        saveState(); // Save state BEFORE drawing starts? 
-        // Usually undo restores to state BEFORE the stroke. 
-        // So yes, push current state to stack now.
-
-        onStrokeStart?.();
-
-        // Draw a dot if just tapped?
-        const canvas = canvasRef.current;
-        if (canvas && lastPosRef.current) {
-            const source = ensureSourceCanvas(canvas.width, canvas.height);
-            const ctx = source?.getContext('2d');
-            if (!source || !ctx) return;
-            const scaleX = source.width / canvas.width;
-            const scaleY = source.height / canvas.height;
-            const brushScale = (scaleX + scaleY) / 2;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            ctx.arc(lastPosRef.current.x, lastPosRef.current.y, (brushSize / 2) * brushScale, 0, Math.PI * 2);
-            ctx.fillStyle = isEraser ? 'rgba(0,0,0,1)' : (isRainbow ? `hsl(${rainbowHueRef.current}, 100%, 50%)` : color);
-            ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
-            ctx.fill();
-            renderFromSource(canvas);
-        }
-    };
-
-    const handlePointerMove = (e: React.PointerEvent) => {
-        if (isStampMode) return;
-        if (!isDrawing || !lastPosRef.current) return;
-
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const source = ensureSourceCanvas(canvas.width, canvas.height);
-        const ctx = source?.getContext('2d');
-        if (!source || !ctx) return;
-
-        const currentPos = getPoint(e);
-        const dist = Math.hypot(currentPos.x - lastPosRef.current.x, currentPos.y - lastPosRef.current.y);
-
-        const scaleX = source.width / canvas.width;
-        const scaleY = source.height / canvas.height;
-        const brushScale = (scaleX + scaleY) / 2;
-        ctx.lineWidth = brushSize * brushScale;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
-
-        ctx.beginPath();
-        ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
-        ctx.lineTo(currentPos.x, currentPos.y);
-
-        if (isRainbow && !isEraser) {
-            // Update hue based on distance
-            rainbowHueRef.current = (rainbowHueRef.current + dist * 0.5) % 360;
-            ctx.strokeStyle = `hsl(${rainbowHueRef.current}, 100%, 50%)`;
-        } else {
-            ctx.strokeStyle = color;
-        }
-
-        ctx.stroke();
-        lastPosRef.current = currentPos;
-        renderFromSource(canvas);
-    };
-
-    const handlePointerUp = (e: React.PointerEvent) => {
-        if (isDrawing) {
-            setIsDrawing(false);
-            e.currentTarget.releasePointerCapture(e.pointerId);
-            onStrokeEnd?.();
-        }
+    /** Claim only the first primary contact and draw its initial dot or stamp immediately. */
+    const handlePointerDown = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+        event.preventDefault();
+        const canvas = event.currentTarget;
+        const session = sessionRef.current;
+        const camera = appliedLayoutRef.current?.fit;
+        if (!camera) return;
+        const point = pointerToWorld(event.clientX, event.clientY, canvas.getBoundingClientRect(), camera);
+        if (!point || !session.begin({ pointerId: event.pointerId, isPrimary: event.isPrimary, button: event.button, point }, {
+            tool, color, size: brushSize, rainbow: isRainbow, stampId, unitScale: 1 / camera.scale,
+        })) return;
+        // A lost native contact may reject capture; window up/cancel listeners still finish the gesture.
+        try { canvas.setPointerCapture(event.pointerId); } catch { /* No native contact remains to capture. */ }
+        const ctx = canvas.getContext('2d');
+        const operation = session.activeOperation;
+        if (operation && ctx) renderOperation(ctx, operation);
+        if (operation?.kind === 'stamp') callbacksRef.current.onStampPlaced?.(operation.stampId);
+        else callbacksRef.current.onStrokeStart?.();
     };
 
     return (
-        <canvas
-            ref={canvasRef}
-            style={{ touchAction: 'none', display: 'block', width: '100%', height: '100%' }}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerOut={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-        />
+        <div ref={stageRef} className="paper-stage" style={{
+            width: '100%', height: '100%', minWidth: 0, minHeight: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+            <canvas
+                ref={canvasRef}
+                className="drawing-paper"
+                data-testid="painting-canvas"
+                aria-label="おえかきする かみ"
+                style={{ touchAction: 'none', display: 'block', flex: 'none', backgroundColor, maxWidth: '100%', maxHeight: '100%' }}
+                onPointerDown={handlePointerDown}
+                onPointerMove={(event) => appendPointerSamples(event.nativeEvent)}
+                onPointerUp={(event) => { appendPointerSamples(event.nativeEvent); finish(event.pointerId); }}
+                onPointerCancel={(event) => finish(event.pointerId)}
+                onLostPointerCapture={(event) => finish(event.pointerId)}
+                onContextMenu={(event) => event.preventDefault()}
+            />
+        </div>
     );
 });
-
-const drawStamp = (
-    ctx: CanvasRenderingContext2D,
-    stampId: StampId,
-    x: number,
-    y: number,
-    size: number,
-    color: string,
-    useRainbowGradient: boolean
-) => {
-    const shapeLine = Math.max(2, size * 0.12);
-    const creatureLine = Math.max(1.2, size * 0.045);
-    const creatureDetail = Math.max(0.8, size * 0.022);
-    const stampStyle: string | CanvasGradient = useRainbowGradient
-        ? createRainbowStampGradient(ctx, x, y, size)
-        : color;
-    ctx.save();
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = stampStyle;
-    ctx.strokeStyle = stampStyle;
-    ctx.lineWidth = shapeLine;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    switch (stampId) {
-        case 'circle': {
-            ctx.beginPath();
-            ctx.arc(x, y, size * 0.38, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            break;
-        }
-        case 'cross': {
-            const len = size * 0.42;
-            ctx.beginPath();
-            ctx.moveTo(x - len, y - len);
-            ctx.lineTo(x + len, y + len);
-            ctx.moveTo(x + len, y - len);
-            ctx.lineTo(x - len, y + len);
-            ctx.stroke();
-            break;
-        }
-        case 'square': {
-            const s = size * 0.7;
-            ctx.beginPath();
-            ctx.rect(x - s / 2, y - s / 2, s, s);
-            ctx.fill();
-            ctx.stroke();
-            break;
-        }
-        case 'triangle': {
-            const h = size * 0.7;
-            const w = size * 0.7;
-            ctx.beginPath();
-            ctx.moveTo(x, y - h / 2);
-            ctx.lineTo(x + w / 2, y + h / 2);
-            ctx.lineTo(x - w / 2, y + h / 2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            break;
-        }
-        case 'rabbit': {
-            const thick = creatureLine * 1.1;
-            const detail = creatureDetail;
-            ctx.lineWidth = thick;
-
-            const headR = size * 0.3;
-            const headY = y + size * 0.08;
-            const earW = size * 0.1;
-            const earH = size * 0.32;
-            const earGap = -size * 0.02;
-            const earY = headY - headR - earH - earGap;
-            const earOffset = size * 0.11;
-
-            // Ears (kept above head to avoid overlap)
-            ctx.beginPath();
-            ctx.ellipse(x - earOffset, earY, earW, earH, 0, 0, Math.PI * 2);
-            ctx.ellipse(x + earOffset, earY, earW, earH, 0, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Head
-            ctx.beginPath();
-            ctx.arc(x, headY, headR, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Eyes
-            ctx.lineWidth = Math.max(detail * 1.8, 1.4);
-            ctx.beginPath();
-            ctx.moveTo(x - size * 0.095, headY - size * 0.05);
-            ctx.lineTo(x - size * 0.094, headY - size * 0.05);
-            ctx.moveTo(x + size * 0.095, headY - size * 0.05);
-            ctx.lineTo(x + size * 0.094, headY - size * 0.05);
-            ctx.stroke();
-
-            // Mouth (simple smile)
-            ctx.beginPath();
-            ctx.moveTo(x - size * 0.045, headY + size * 0.055);
-            ctx.quadraticCurveTo(x, headY + size * 0.085, x + size * 0.045, headY + size * 0.055);
-            ctx.stroke();
-
-            break;
-        }
-        case 'bird': {
-            const thick = creatureLine * 1.1;
-            const detail = creatureDetail;
-            ctx.lineWidth = thick;
-
-            const bodyR = size * 0.28;
-            const bodyY = y + size * 0.06;
-
-            // Body
-            ctx.beginPath();
-            ctx.arc(x, bodyY, bodyR, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Wing (single curve inside body)
-            ctx.lineWidth = detail;
-            ctx.beginPath();
-            ctx.arc(x - size * 0.02, bodyY + size * 0.02, size * 0.16, Math.PI * 0.9, Math.PI * 1.8);
-            ctx.stroke();
-
-            // Eye
-            ctx.beginPath();
-            ctx.lineWidth = Math.max(detail * 1.8, 1.4);
-            ctx.moveTo(x + size * 0.1, bodyY - size * 0.04);
-            ctx.lineTo(x + size * 0.101, bodyY - size * 0.04);
-            ctx.stroke();
-
-            // Beak
-            ctx.lineWidth = thick;
-            ctx.beginPath();
-            ctx.moveTo(x + bodyR - size * 0.01, bodyY - size * 0.01);
-            ctx.lineTo(x + bodyR + size * 0.08, bodyY + size * 0.02);
-            ctx.lineTo(x + bodyR - size * 0.01, bodyY + size * 0.05);
-            ctx.closePath();
-            ctx.stroke();
-
-            // Tail (two short lines)
-            ctx.lineWidth = detail;
-            ctx.beginPath();
-            ctx.moveTo(x - bodyR, bodyY + size * 0.02);
-            ctx.lineTo(x - bodyR - size * 0.1, bodyY - size * 0.02);
-            ctx.moveTo(x - bodyR, bodyY + size * 0.06);
-            ctx.lineTo(x - bodyR - size * 0.1, bodyY + size * 0.12);
-            ctx.stroke();
-
-            // Cheek + tiny crest
-            ctx.beginPath();
-            ctx.arc(x + size * 0.05, bodyY + size * 0.02, size * 0.02, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(x + size * 0.02, bodyY - bodyR - size * 0.02);
-            ctx.lineTo(x + size * 0.06, bodyY - bodyR - size * 0.12);
-            ctx.stroke();
-            break;
-        }
-        case 'train': {
-            const bodyW = size * 0.8;
-            const bodyH = size * 0.38;
-            const bodyX = x - bodyW / 2;
-            const bodyY = y - bodyH / 2;
-
-            ctx.lineWidth = creatureLine * 1.1;
-            ctx.beginPath();
-            ctx.rect(bodyX, bodyY, bodyW, bodyH);
-            ctx.stroke();
-
-            const cabinW = size * 0.28;
-            const cabinH = size * 0.22;
-            ctx.beginPath();
-            ctx.rect(x - size * 0.12, y - bodyH / 2 - cabinH * 0.6, cabinW, cabinH);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.rect(x - size * 0.42, y - bodyH / 2 - size * 0.2, size * 0.12, size * 0.2);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(x - size * 0.28, y + bodyH / 2 + size * 0.06, size * 0.12, 0, Math.PI * 2);
-            ctx.arc(x + size * 0.02, y + bodyH / 2 + size * 0.06, size * 0.12, 0, Math.PI * 2);
-            ctx.arc(x + size * 0.32, y + bodyH / 2 + size * 0.06, size * 0.12, 0, Math.PI * 2);
-            ctx.stroke();
-
-            const detail = creatureDetail;
-            ctx.lineWidth = detail;
-            ctx.beginPath();
-            ctx.rect(x - size * 0.06, y - size * 0.12, size * 0.18, size * 0.12);
-            ctx.rect(x + size * 0.18, y - size * 0.12, size * 0.18, size * 0.12);
-            ctx.stroke();
-            break;
-        }
-        default:
-            break;
-    }
-
-    ctx.restore();
-};
-
-const createRainbowStampGradient = (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    size: number
-) => {
-    const gradient = ctx.createLinearGradient(
-        x - size * 0.55,
-        y - size * 0.55,
-        x + size * 0.55,
-        y + size * 0.55
-    );
-    gradient.addColorStop(0.0, 'hsl(0, 100%, 50%)');
-    gradient.addColorStop(0.17, 'hsl(35, 100%, 50%)');
-    gradient.addColorStop(0.34, 'hsl(60, 100%, 50%)');
-    gradient.addColorStop(0.51, 'hsl(130, 100%, 45%)');
-    gradient.addColorStop(0.68, 'hsl(210, 100%, 50%)');
-    gradient.addColorStop(0.85, 'hsl(265, 100%, 55%)');
-    gradient.addColorStop(1.0, 'hsl(320, 100%, 55%)');
-    return gradient;
-};
-
-const getStampBaseSize = (brushSize: number) => {
-    if (brushSize <= 4) return 52;
-    if (brushSize <= 8) return 78;
-    return 110;
-};

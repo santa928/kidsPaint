@@ -1,12 +1,12 @@
 {
-  "name": "Kids Paint",
-  "short_name": "Kids Paint",
-  "description": "Simple drawing app for kids with brush, rainbow, and stamps.",
+  "name": "おえかき · Kids Paint",
+  "short_name": "おえかき",
+  "description": "クレヨン、にじいろ、スタンプで自由にお絵描き。作品はこの端末に保存できます。",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
-  "theme_color": "#ff6b6b",
-  "background_color": "#fff4d6",
+  "theme_color": "#f3eddf",
+  "background_color": "#f3eddf",
   "icons": [
     {
       "src": "icon-192.png",

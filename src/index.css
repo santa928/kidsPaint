@@ -1,41 +1,12 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  
-  /* Mobile optimization: prevent scrolling and selection */
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  overflow: hidden;
-  
-  background-color: #f9f9f9;
-}
-
-#root {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-@supports (height: 100dvh) {
-  body {
-    min-height: 100dvh;
-  }
-
-  #root {
-    height: 100dvh;
-  }
-}
+:root { font-family: 'Hiragino Maru Gothic ProN', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', system-ui, sans-serif; line-height: 1.5; font-weight: 500; color: #51483b; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; background: #f4eddf; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; overflow: hidden; overscroll-behavior: none; }
+#root { width: 100%; height: 100vh; height: 100dvh; }
+button, input { font: inherit; }
+button { color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+button:disabled { opacity: .38; cursor: default; }
+button:focus-visible, input:focus-visible { outline: 3px solid #3773ad; outline-offset: 3px; }
+button:active:not(:disabled) { transform: translateY(1px); }
+button { transition: background-color 120ms, transform 120ms; }
+h1, h2, h3, p { margin: 0; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

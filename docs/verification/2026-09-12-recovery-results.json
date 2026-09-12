@@ -1,0 +1,9 @@
+[
+  {
+    "engine": "chromium-recovery",
+    "checks": [
+      "initial read failure retries the original artwork, without creating a blank",
+      "competing tabs cannot overwrite newer persisted strokes; local marks remain visible and exportable"
+    ]
+  }
+]

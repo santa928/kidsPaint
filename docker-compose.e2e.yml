@@ -1,0 +1,12 @@
+services:
+  e2e:
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
+    network_mode: service:web
+    depends_on:
+      - web
+    volumes:
+      - ./output:/app/output
+    environment:
+      APP_URL: http://127.0.0.1:5173/kidsPaint/

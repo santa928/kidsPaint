@@ -1,0 +1,257 @@
+{
+  "area": [
+    {
+      "engine": "chromium",
+      "fullscreen": "native entry and exit",
+      "layouts": [
+        {
+          "viewport": [
+            1024,
+            768
+          ],
+          "paperPercent": 100,
+          "drawablePercent": 83.477783203125
+        },
+        {
+          "viewport": [
+            1024,
+            768
+          ],
+          "paperPercent": 100,
+          "drawablePercent": 99.60123697916666
+        },
+        {
+          "viewport": [
+            768,
+            1024
+          ],
+          "paperPercent": 100,
+          "drawablePercent": 99.60123697916666
+        },
+        {
+          "viewport": [
+            768,
+            1024
+          ],
+          "paperPercent": 100,
+          "drawablePercent": 84.41365559895834
+        },
+        {
+          "viewport": [
+            390,
+            844
+          ],
+          "paperPercent": 100,
+          "drawablePercent": 70.43044901548835
+        }
+      ],
+      "pngInfo": {
+        "width": 1081,
+        "height": 998,
+        "topInk": 397
+      },
+      "checks": [
+        "native pointer input in four corners",
+        "outside-reference-paper margin saved/reloaded/exported",
+        "viewport unchanged while toggling controls",
+        "outside-paper undo clears pixels",
+        "clear resets camera and undo restores exact prior view",
+        "erased outer margin neither shrinks remaining ink on reload nor leaves an empty PNG band",
+        "all buttons contained"
+      ],
+      "errors": []
+    },
+    {
+      "engine": "webkit",
+      "fullscreen": "native entry and exit",
+      "layouts": [
+        {
+          "viewport": [
+            1024,
+            768
+          ],
+          "paperPercent": 100,
+          "drawablePercent": 83.47371419270834
+        },
+        {
+          "viewport": [
+            1024,
+            768
+          ],
+          "paperPercent": 100,
+          "drawablePercent": 99.60123697916666
+        },
+        {
+          "viewport": [
+            768,
+            1024
+          ],
+          "paperPercent": 100,
+          "drawablePercent": 99.60123697916666
+        },
+        {
+          "viewport": [
+            768,
+            1024
+          ],
+          "paperPercent": 100,
+          "drawablePercent": 84.405517578125
+        },
+        {
+          "viewport": [
+            390,
+            844
+          ],
+          "paperPercent": 99.99814869668246,
+          "drawablePercent": 70.42067718766796
+        }
+      ],
+      "pngInfo": {
+        "width": 1081,
+        "height": 998,
+        "topInk": 397
+      },
+      "checks": [
+        "native pointer input in four corners",
+        "outside-reference-paper margin saved/reloaded/exported",
+        "viewport unchanged while toggling controls",
+        "outside-paper undo clears pixels",
+        "clear resets camera and undo restores exact prior view",
+        "erased outer margin neither shrinks remaining ink on reload nor leaves an empty PNG band",
+        "all buttons contained"
+      ],
+      "errors": []
+    }
+  ],
+  "performance": {
+    "scenario": "500 synthetic strokes / 60000 points, 20% rainbow; then 120 native pointer moves",
+    "environment": "headless Chromium, Linux Docker, DPR 2; not an iPad",
+    "restorationMs": 430,
+    "saveMs": 75,
+    "burst": {
+      "taps": 40,
+      "totalMs": 417,
+      "afterLastTapMs": 167
+    },
+    "savedOperationCount": 541,
+    "restoredOperationCount": 541,
+    "frames": 125,
+    "frameP95Ms": 16.700000000000273,
+    "frameMaxMs": 33.40000000000009,
+    "longTasksMs": [
+      52
+    ]
+  },
+  "offline": [
+    {
+      "engine": "chromium",
+      "precachedFiles": 44,
+      "offlineSoundBytes": 24742,
+      "checks": [
+        "production hashed JS/CSS and sounds precached",
+        "foreign cache survives",
+        "server stopped with HTTP caching disabled; offline reload and local artwork persistence"
+      ]
+    },
+    {
+      "engine": "webkit",
+      "precachedFiles": 44,
+      "offlineSoundBytes": 24742,
+      "checks": [
+        "production hashed JS/CSS and sounds precached",
+        "foreign cache survives",
+        "server stopped with HTTP caching disabled; offline reload and local artwork persistence"
+      ]
+    }
+  ],
+  "stamps": [
+    {
+      "engine": "chromium",
+      "renderCount": 210,
+      "allInside": true,
+      "allDeterministic": true,
+      "statePreserved": true
+    },
+    {
+      "engine": "webkit",
+      "renderCount": 210,
+      "allInside": true,
+      "allDeterministic": true,
+      "statePreserved": true
+    }
+  ],
+  "legacy": [
+    {
+      "engine": "chromium",
+      "status": "PASS",
+      "migration": {
+        "coordinateSpace": "world",
+        "legacyOperationCount": 7,
+        "operationCount": 8,
+        "newStamp": {
+          "kind": "stamp",
+          "designVersion": 2,
+          "stampId": "circle",
+          "x": 600,
+          "y": 449.99999999999994,
+          "size": 131.25,
+          "color": "#FF0000",
+          "rainbow": false
+        }
+      },
+      "pixelDiff": {
+        "changedOutside": 0,
+        "excludedPixelRect": [
+          450,
+          322,
+          574,
+          446
+        ]
+      },
+      "checks": [
+        "actual IndexedDB legacy record loaded without pre-migration",
+        "one V2 circle placed through visible stamp picker and canvas pointer input",
+        "all seven legacy stamp regions remain pixel-identical after append and reload",
+        "top rabbit, left cross, right bird, and bottom train crop bands remain pixel-identical",
+        "saved drawing retains the seven legacy operations and the new designVersion 2 stamp"
+      ],
+      "errors": []
+    },
+    {
+      "engine": "webkit",
+      "status": "PASS",
+      "migration": {
+        "coordinateSpace": "world",
+        "legacyOperationCount": 7,
+        "operationCount": 8,
+        "newStamp": {
+          "kind": "stamp",
+          "designVersion": 2,
+          "stampId": "circle",
+          "x": 600,
+          "y": 449.99999999999994,
+          "size": 131.25,
+          "color": "#FF0000",
+          "rainbow": false
+        }
+      },
+      "pixelDiff": {
+        "changedOutside": 0,
+        "excludedPixelRect": [
+          450,
+          322,
+          574,
+          446
+        ]
+      },
+      "checks": [
+        "actual IndexedDB legacy record loaded without pre-migration",
+        "one V2 circle placed through visible stamp picker and canvas pointer input",
+        "all seven legacy stamp regions remain pixel-identical after append and reload",
+        "top rabbit, left cross, right bird, and bottom train crop bands remain pixel-identical",
+        "saved drawing retains the seven legacy operations and the new designVersion 2 stamp"
+      ],
+      "errors": []
+    }
+  ]
+}

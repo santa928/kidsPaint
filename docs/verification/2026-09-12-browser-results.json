@@ -1,0 +1,1819 @@
+[
+  {
+    "engine": "chromium",
+    "errors": [],
+    "checks": [
+      "native drawing, exact undo pixels, eraser-to-crayon, retained rainbow, three sizes",
+      "matching seven stamp previews, circular geometry after rotation, IndexedDB reload restoration",
+      "gallery exports a non-current paper without changing the active artwork",
+      "safe new paper, gallery reopens original, PNG dimensions and opaque background, clear undo and reload",
+      "all seven stamp marks, sound setting persistence, 390px fallback, modal focus return",
+      "CDP native overlapping fingers ignore secondary contact; pointercancel, held-finger rotation, and equal-size paper translation stop ownership"
+    ],
+    "layouts": [
+      {
+        "viewport": [
+          1024,
+          768
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "さくひん",
+            "x": 671.46875,
+            "y": 8,
+            "width": 114.125,
+            "height": 56,
+            "right": 785.59375,
+            "bottom": 64
+          },
+          {
+            "name": "かみのいろ",
+            "x": 799.59375,
+            "y": 8,
+            "width": 126.40625,
+            "height": 56,
+            "right": 926,
+            "bottom": 64
+          },
+          {
+            "name": "おうちの方へ",
+            "x": 940,
+            "y": 8,
+            "width": 56,
+            "height": 56,
+            "right": 996,
+            "bottom": 64
+          },
+          {
+            "name": "あか",
+            "x": 196,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 252,
+            "bottom": 162
+          },
+          {
+            "name": "だいだい",
+            "x": 260,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 316,
+            "bottom": 162
+          },
+          {
+            "name": "きいろ",
+            "x": 324,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 380,
+            "bottom": 162
+          },
+          {
+            "name": "みどり",
+            "x": 388,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 444,
+            "bottom": 162
+          },
+          {
+            "name": "あお",
+            "x": 452,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 508,
+            "bottom": 162
+          },
+          {
+            "name": "むらさき",
+            "x": 516,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 572,
+            "bottom": 162
+          },
+          {
+            "name": "ピンク",
+            "x": 580,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 636,
+            "bottom": 162
+          },
+          {
+            "name": "くろ",
+            "x": 644,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 700,
+            "bottom": 162
+          },
+          {
+            "name": "しろ",
+            "x": 708,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 764,
+            "bottom": 162
+          },
+          {
+            "name": "にじいろ",
+            "x": 772,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 828,
+            "bottom": 162
+          },
+          {
+            "name": "クレヨン",
+            "x": 184.515625,
+            "y": 656,
+            "width": 73.125,
+            "height": 69,
+            "right": 257.640625,
+            "bottom": 725
+          },
+          {
+            "name": "スタンプ",
+            "x": 265.640625,
+            "y": 656,
+            "width": 73.125,
+            "height": 69,
+            "right": 338.765625,
+            "bottom": 725
+          },
+          {
+            "name": "けしゴム",
+            "x": 346.765625,
+            "y": 656,
+            "width": 73.125,
+            "height": 69,
+            "right": 419.890625,
+            "bottom": 725
+          },
+          {
+            "name": "ほそい",
+            "x": 448.890625,
+            "y": 662.5,
+            "width": 56,
+            "height": 56,
+            "right": 504.890625,
+            "bottom": 718.5
+          },
+          {
+            "name": "ふつう",
+            "x": 506.890625,
+            "y": 662.5,
+            "width": 56,
+            "height": 56,
+            "right": 562.890625,
+            "bottom": 718.5
+          },
+          {
+            "name": "ふとい",
+            "x": 564.890625,
+            "y": 662.5,
+            "width": 56,
+            "height": 56,
+            "right": 620.890625,
+            "bottom": 718.5
+          },
+          {
+            "name": "ひとつもどす",
+            "x": 649.890625,
+            "y": 656,
+            "width": 68,
+            "height": 69,
+            "right": 717.890625,
+            "bottom": 725
+          },
+          {
+            "name": "あたらしいかみ",
+            "x": 725.890625,
+            "y": 656,
+            "width": 113.578125,
+            "height": 69,
+            "right": 839.46875,
+            "bottom": 725
+          }
+        ],
+        "paper": {
+          "x": 217.328125,
+          "y": 185,
+          "width": 589.328125,
+          "height": 442,
+          "top": 185,
+          "right": 806.65625,
+          "bottom": 627,
+          "left": 217.328125
+        }
+      },
+      {
+        "viewport": [
+          1024,
+          768
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "とじる",
+            "x": 751,
+            "y": 174,
+            "width": 56,
+            "height": 56,
+            "right": 807,
+            "bottom": 230
+          },
+          {
+            "name": "まる",
+            "x": 217,
+            "y": 250,
+            "width": 138.5,
+            "height": 166,
+            "right": 355.5,
+            "bottom": 416
+          },
+          {
+            "name": "ばつ",
+            "x": 367.5,
+            "y": 250,
+            "width": 138.5,
+            "height": 166,
+            "right": 506,
+            "bottom": 416
+          },
+          {
+            "name": "しかく",
+            "x": 518,
+            "y": 250,
+            "width": 138.5,
+            "height": 166,
+            "right": 656.5,
+            "bottom": 416
+          },
+          {
+            "name": "さんかく",
+            "x": 668.5,
+            "y": 250,
+            "width": 138.5,
+            "height": 166,
+            "right": 807,
+            "bottom": 416
+          },
+          {
+            "name": "うさぎ",
+            "x": 217,
+            "y": 428,
+            "width": 138.5,
+            "height": 166,
+            "right": 355.5,
+            "bottom": 594
+          },
+          {
+            "name": "とり",
+            "x": 367.5,
+            "y": 428,
+            "width": 138.5,
+            "height": 166,
+            "right": 506,
+            "bottom": 594
+          },
+          {
+            "name": "でんしゃ",
+            "x": 518,
+            "y": 428,
+            "width": 138.5,
+            "height": 166,
+            "right": 656.5,
+            "bottom": 594
+          }
+        ],
+        "paper": {
+          "x": 217.328125,
+          "y": 185,
+          "width": 589.328125,
+          "height": 442,
+          "top": 185,
+          "right": 806.65625,
+          "bottom": 627,
+          "left": 217.328125
+        }
+      },
+      {
+        "viewport": [
+          768,
+          1024
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "さくひん",
+            "x": 415.46875,
+            "y": 8,
+            "width": 114.125,
+            "height": 56,
+            "right": 529.59375,
+            "bottom": 64
+          },
+          {
+            "name": "かみのいろ",
+            "x": 543.59375,
+            "y": 8,
+            "width": 126.40625,
+            "height": 56,
+            "right": 670,
+            "bottom": 64
+          },
+          {
+            "name": "おうちの方へ",
+            "x": 684,
+            "y": 8,
+            "width": 56,
+            "height": 56,
+            "right": 740,
+            "bottom": 64
+          },
+          {
+            "name": "あか",
+            "x": 68,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 124,
+            "bottom": 162
+          },
+          {
+            "name": "だいだい",
+            "x": 132,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 188,
+            "bottom": 162
+          },
+          {
+            "name": "きいろ",
+            "x": 196,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 252,
+            "bottom": 162
+          },
+          {
+            "name": "みどり",
+            "x": 260,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 316,
+            "bottom": 162
+          },
+          {
+            "name": "あお",
+            "x": 324,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 380,
+            "bottom": 162
+          },
+          {
+            "name": "むらさき",
+            "x": 388,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 444,
+            "bottom": 162
+          },
+          {
+            "name": "ピンク",
+            "x": 452,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 508,
+            "bottom": 162
+          },
+          {
+            "name": "くろ",
+            "x": 516,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 572,
+            "bottom": 162
+          },
+          {
+            "name": "しろ",
+            "x": 580,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 636,
+            "bottom": 162
+          },
+          {
+            "name": "にじいろ",
+            "x": 644,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 700,
+            "bottom": 162
+          },
+          {
+            "name": "クレヨン",
+            "x": 93.515625,
+            "y": 914,
+            "width": 65.125,
+            "height": 69,
+            "right": 158.640625,
+            "bottom": 983
+          },
+          {
+            "name": "スタンプ",
+            "x": 162.640625,
+            "y": 914,
+            "width": 65.125,
+            "height": 69,
+            "right": 227.765625,
+            "bottom": 983
+          },
+          {
+            "name": "けしゴム",
+            "x": 231.765625,
+            "y": 914,
+            "width": 65.125,
+            "height": 69,
+            "right": 296.890625,
+            "bottom": 983
+          },
+          {
+            "name": "ほそい",
+            "x": 313.890625,
+            "y": 920.5,
+            "width": 56,
+            "height": 56,
+            "right": 369.890625,
+            "bottom": 976.5
+          },
+          {
+            "name": "ふつう",
+            "x": 371.890625,
+            "y": 920.5,
+            "width": 56,
+            "height": 56,
+            "right": 427.890625,
+            "bottom": 976.5
+          },
+          {
+            "name": "ふとい",
+            "x": 429.890625,
+            "y": 920.5,
+            "width": 56,
+            "height": 56,
+            "right": 485.890625,
+            "bottom": 976.5
+          },
+          {
+            "name": "ひとつもどす",
+            "x": 502.890625,
+            "y": 914,
+            "width": 62,
+            "height": 69,
+            "right": 564.890625,
+            "bottom": 983
+          },
+          {
+            "name": "あたらしいかみ",
+            "x": 568.890625,
+            "y": 914,
+            "width": 105.578125,
+            "height": 69,
+            "right": 674.46875,
+            "bottom": 983
+          }
+        ],
+        "paper": {
+          "x": 24,
+          "y": 266,
+          "width": 720,
+          "height": 540,
+          "top": 266,
+          "right": 744,
+          "bottom": 806,
+          "left": 24
+        }
+      },
+      {
+        "viewport": [
+          768,
+          1024
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "とじる",
+            "x": 668,
+            "y": 290.703125,
+            "width": 56,
+            "height": 56,
+            "right": 724,
+            "bottom": 346.703125
+          },
+          {
+            "name": "2026/9/12の作品 いまのえ",
+            "x": 55,
+            "y": 419.703125,
+            "width": 194,
+            "height": 193,
+            "right": 249,
+            "bottom": 612.703125
+          },
+          {
+            "name": "画像を保存",
+            "x": 55,
+            "y": 624.703125,
+            "width": 194,
+            "height": 56,
+            "right": 249,
+            "bottom": 680.703125
+          },
+          {
+            "name": "2026/9/12の作品",
+            "x": 287,
+            "y": 419.703125,
+            "width": 194,
+            "height": 190,
+            "right": 481,
+            "bottom": 609.703125
+          },
+          {
+            "name": "画像を保存",
+            "x": 287,
+            "y": 621.703125,
+            "width": 194,
+            "height": 56,
+            "right": 481,
+            "bottom": 677.703125
+          },
+          {
+            "name": "2026/9/12の作品",
+            "x": 519,
+            "y": 419.703125,
+            "width": 194,
+            "height": 190,
+            "right": 713,
+            "bottom": 609.703125
+          },
+          {
+            "name": "画像を保存",
+            "x": 519,
+            "y": 621.703125,
+            "width": 194,
+            "height": 56,
+            "right": 713,
+            "bottom": 677.703125
+          }
+        ],
+        "paper": {
+          "x": 120.75,
+          "y": 185,
+          "width": 526.5,
+          "height": 702,
+          "top": 185,
+          "right": 647.25,
+          "bottom": 887,
+          "left": 120.75
+        }
+      },
+      {
+        "viewport": [
+          390,
+          844
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "さくひん",
+            "x": 121.890625,
+            "y": 8,
+            "width": 90.9375,
+            "height": 56,
+            "right": 212.828125,
+            "bottom": 64
+          },
+          {
+            "name": "かみのいろ",
+            "x": 216.828125,
+            "y": 8,
+            "width": 101.171875,
+            "height": 56,
+            "right": 318,
+            "bottom": 64
+          },
+          {
+            "name": "おうちの方へ",
+            "x": 322,
+            "y": 8,
+            "width": 56,
+            "height": 56,
+            "right": 378,
+            "bottom": 64
+          },
+          {
+            "name": "あか",
+            "x": 15,
+            "y": 80,
+            "width": 70.390625,
+            "height": 48,
+            "right": 85.390625,
+            "bottom": 128
+          },
+          {
+            "name": "だいだい",
+            "x": 87.390625,
+            "y": 80,
+            "width": 70.40625,
+            "height": 48,
+            "right": 157.796875,
+            "bottom": 128
+          },
+          {
+            "name": "きいろ",
+            "x": 159.796875,
+            "y": 80,
+            "width": 70.390625,
+            "height": 48,
+            "right": 230.1875,
+            "bottom": 128
+          },
+          {
+            "name": "みどり",
+            "x": 232.1875,
+            "y": 80,
+            "width": 70.40625,
+            "height": 48,
+            "right": 302.59375,
+            "bottom": 128
+          },
+          {
+            "name": "あお",
+            "x": 304.59375,
+            "y": 80,
+            "width": 70.40625,
+            "height": 48,
+            "right": 375,
+            "bottom": 128
+          },
+          {
+            "name": "むらさき",
+            "x": 15,
+            "y": 130,
+            "width": 70.390625,
+            "height": 48,
+            "right": 85.390625,
+            "bottom": 178
+          },
+          {
+            "name": "ピンク",
+            "x": 87.390625,
+            "y": 130,
+            "width": 70.40625,
+            "height": 48,
+            "right": 157.796875,
+            "bottom": 178
+          },
+          {
+            "name": "くろ",
+            "x": 159.796875,
+            "y": 130,
+            "width": 70.390625,
+            "height": 48,
+            "right": 230.1875,
+            "bottom": 178
+          },
+          {
+            "name": "しろ",
+            "x": 232.1875,
+            "y": 130,
+            "width": 70.40625,
+            "height": 48,
+            "right": 302.59375,
+            "bottom": 178
+          },
+          {
+            "name": "にじいろ",
+            "x": 304.59375,
+            "y": 130,
+            "width": 70.40625,
+            "height": 48,
+            "right": 375,
+            "bottom": 178
+          },
+          {
+            "name": "クレヨン",
+            "x": 30.671875,
+            "y": 695,
+            "width": 56,
+            "height": 62,
+            "right": 86.671875,
+            "bottom": 757
+          },
+          {
+            "name": "スタンプ",
+            "x": 90.671875,
+            "y": 695,
+            "width": 56,
+            "height": 62,
+            "right": 146.671875,
+            "bottom": 757
+          },
+          {
+            "name": "けしゴム",
+            "x": 150.671875,
+            "y": 695,
+            "width": 56,
+            "height": 62,
+            "right": 206.671875,
+            "bottom": 757
+          },
+          {
+            "name": "ほそい",
+            "x": 109,
+            "y": 763,
+            "width": 56,
+            "height": 44,
+            "right": 165,
+            "bottom": 807
+          },
+          {
+            "name": "ふつう",
+            "x": 167,
+            "y": 763,
+            "width": 56,
+            "height": 44,
+            "right": 223,
+            "bottom": 807
+          },
+          {
+            "name": "ふとい",
+            "x": 225,
+            "y": 763,
+            "width": 56,
+            "height": 44,
+            "right": 281,
+            "bottom": 807
+          },
+          {
+            "name": "ひとつもどす",
+            "x": 212.671875,
+            "y": 695,
+            "width": 56,
+            "height": 62,
+            "right": 268.671875,
+            "bottom": 757
+          },
+          {
+            "name": "あたらしいかみ",
+            "x": 272.671875,
+            "y": 695,
+            "width": 86.640625,
+            "height": 62,
+            "right": 359.3125,
+            "bottom": 757
+          }
+        ],
+        "paper": {
+          "x": 16,
+          "y": 299.75,
+          "width": 358,
+          "height": 268.5,
+          "top": 299.75,
+          "right": 374,
+          "bottom": 568.25,
+          "left": 16
+        }
+      },
+      {
+        "viewport": [
+          390,
+          844
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "とじる",
+            "x": 296,
+            "y": 190.984375,
+            "width": 56,
+            "height": 56,
+            "right": 352,
+            "bottom": 246.984375
+          },
+          {
+            "name": "まる",
+            "x": 38,
+            "y": 266.984375,
+            "width": 99.328125,
+            "height": 123.34375,
+            "right": 137.328125,
+            "bottom": 390.328125
+          },
+          {
+            "name": "ばつ",
+            "x": 145.328125,
+            "y": 266.984375,
+            "width": 99.328125,
+            "height": 123.34375,
+            "right": 244.65625,
+            "bottom": 390.328125
+          },
+          {
+            "name": "しかく",
+            "x": 252.65625,
+            "y": 266.984375,
+            "width": 99.34375,
+            "height": 123.34375,
+            "right": 352,
+            "bottom": 390.328125
+          },
+          {
+            "name": "さんかく",
+            "x": 38,
+            "y": 398.328125,
+            "width": 99.328125,
+            "height": 123.34375,
+            "right": 137.328125,
+            "bottom": 521.671875
+          },
+          {
+            "name": "うさぎ",
+            "x": 145.328125,
+            "y": 398.328125,
+            "width": 99.328125,
+            "height": 123.34375,
+            "right": 244.65625,
+            "bottom": 521.671875
+          },
+          {
+            "name": "とり",
+            "x": 252.65625,
+            "y": 398.328125,
+            "width": 99.34375,
+            "height": 123.34375,
+            "right": 352,
+            "bottom": 521.671875
+          },
+          {
+            "name": "でんしゃ",
+            "x": 38,
+            "y": 529.671875,
+            "width": 99.328125,
+            "height": 123.328125,
+            "right": 137.328125,
+            "bottom": 653
+          }
+        ],
+        "paper": {
+          "x": 16,
+          "y": 299.75,
+          "width": 358,
+          "height": 268.5,
+          "top": 299.75,
+          "right": 374,
+          "bottom": 568.25,
+          "left": 16
+        }
+      }
+    ]
+  },
+  {
+    "engine": "webkit",
+    "errors": [],
+    "checks": [
+      "native drawing, exact undo pixels, eraser-to-crayon, retained rainbow, three sizes",
+      "matching seven stamp previews, circular geometry after rotation, IndexedDB reload restoration",
+      "gallery exports a non-current paper without changing the active artwork",
+      "safe new paper, gallery reopens original, PNG dimensions and opaque background, clear undo and reload",
+      "all seven stamp marks, sound setting persistence, 390px fallback, modal focus return"
+    ],
+    "layouts": [
+      {
+        "viewport": [
+          1024,
+          768
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "さくひん",
+            "x": 671.46875,
+            "y": 8,
+            "width": 114.125,
+            "height": 56,
+            "right": 785.59375,
+            "bottom": 64
+          },
+          {
+            "name": "かみのいろ",
+            "x": 799.59375,
+            "y": 8,
+            "width": 126.40625,
+            "height": 56,
+            "right": 926,
+            "bottom": 64
+          },
+          {
+            "name": "おうちの方へ",
+            "x": 940,
+            "y": 8,
+            "width": 56,
+            "height": 56,
+            "right": 996,
+            "bottom": 64
+          },
+          {
+            "name": "あか",
+            "x": 196,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 252,
+            "bottom": 162
+          },
+          {
+            "name": "だいだい",
+            "x": 260,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 316,
+            "bottom": 162
+          },
+          {
+            "name": "きいろ",
+            "x": 324,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 380,
+            "bottom": 162
+          },
+          {
+            "name": "みどり",
+            "x": 388,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 444,
+            "bottom": 162
+          },
+          {
+            "name": "あお",
+            "x": 452,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 508,
+            "bottom": 162
+          },
+          {
+            "name": "むらさき",
+            "x": 516,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 572,
+            "bottom": 162
+          },
+          {
+            "name": "ピンク",
+            "x": 580,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 636,
+            "bottom": 162
+          },
+          {
+            "name": "くろ",
+            "x": 644,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 700,
+            "bottom": 162
+          },
+          {
+            "name": "しろ",
+            "x": 708,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 764,
+            "bottom": 162
+          },
+          {
+            "name": "にじいろ",
+            "x": 772,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 828,
+            "bottom": 162
+          },
+          {
+            "name": "クレヨン",
+            "x": 184.515625,
+            "y": 656,
+            "width": 73.125,
+            "height": 69,
+            "right": 257.640625,
+            "bottom": 725
+          },
+          {
+            "name": "スタンプ",
+            "x": 265.640625,
+            "y": 656,
+            "width": 73.125,
+            "height": 69,
+            "right": 338.765625,
+            "bottom": 725
+          },
+          {
+            "name": "けしゴム",
+            "x": 346.765625,
+            "y": 656,
+            "width": 73.125,
+            "height": 69,
+            "right": 419.890625,
+            "bottom": 725
+          },
+          {
+            "name": "ほそい",
+            "x": 448.890625,
+            "y": 662.5,
+            "width": 56,
+            "height": 56,
+            "right": 504.890625,
+            "bottom": 718.5
+          },
+          {
+            "name": "ふつう",
+            "x": 506.890625,
+            "y": 662.5,
+            "width": 56,
+            "height": 56,
+            "right": 562.890625,
+            "bottom": 718.5
+          },
+          {
+            "name": "ふとい",
+            "x": 564.890625,
+            "y": 662.5,
+            "width": 56,
+            "height": 56,
+            "right": 620.890625,
+            "bottom": 718.5
+          },
+          {
+            "name": "ひとつもどす",
+            "x": 649.890625,
+            "y": 656,
+            "width": 68,
+            "height": 69,
+            "right": 717.890625,
+            "bottom": 725
+          },
+          {
+            "name": "あたらしいかみ",
+            "x": 725.890625,
+            "y": 656,
+            "width": 113.578125,
+            "height": 69,
+            "right": 839.46875,
+            "bottom": 725
+          }
+        ],
+        "paper": {
+          "x": 217.328125,
+          "y": 185,
+          "width": 589.328125,
+          "height": 442,
+          "top": 185,
+          "right": 806.65625,
+          "bottom": 627,
+          "left": 217.328125
+        }
+      },
+      {
+        "viewport": [
+          1024,
+          768
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "とじる",
+            "x": 751,
+            "y": 174,
+            "width": 56,
+            "height": 56,
+            "right": 807,
+            "bottom": 230
+          },
+          {
+            "name": "まる",
+            "x": 217,
+            "y": 250,
+            "width": 138.5,
+            "height": 166,
+            "right": 355.5,
+            "bottom": 416
+          },
+          {
+            "name": "ばつ",
+            "x": 367.5,
+            "y": 250,
+            "width": 138.5,
+            "height": 166,
+            "right": 506,
+            "bottom": 416
+          },
+          {
+            "name": "しかく",
+            "x": 518,
+            "y": 250,
+            "width": 138.5,
+            "height": 166,
+            "right": 656.5,
+            "bottom": 416
+          },
+          {
+            "name": "さんかく",
+            "x": 668.5,
+            "y": 250,
+            "width": 138.5,
+            "height": 166,
+            "right": 807,
+            "bottom": 416
+          },
+          {
+            "name": "うさぎ",
+            "x": 217,
+            "y": 428,
+            "width": 138.5,
+            "height": 166,
+            "right": 355.5,
+            "bottom": 594
+          },
+          {
+            "name": "とり",
+            "x": 367.5,
+            "y": 428,
+            "width": 138.5,
+            "height": 166,
+            "right": 506,
+            "bottom": 594
+          },
+          {
+            "name": "でんしゃ",
+            "x": 518,
+            "y": 428,
+            "width": 138.5,
+            "height": 166,
+            "right": 656.5,
+            "bottom": 594
+          }
+        ],
+        "paper": {
+          "x": 217.328125,
+          "y": 185,
+          "width": 589.328125,
+          "height": 442,
+          "top": 185,
+          "right": 806.65625,
+          "bottom": 627,
+          "left": 217.328125
+        }
+      },
+      {
+        "viewport": [
+          768,
+          1024
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "さくひん",
+            "x": 415.46875,
+            "y": 8,
+            "width": 114.125,
+            "height": 56,
+            "right": 529.59375,
+            "bottom": 64
+          },
+          {
+            "name": "かみのいろ",
+            "x": 543.59375,
+            "y": 8,
+            "width": 126.40625,
+            "height": 56,
+            "right": 670,
+            "bottom": 64
+          },
+          {
+            "name": "おうちの方へ",
+            "x": 684,
+            "y": 8,
+            "width": 56,
+            "height": 56,
+            "right": 740,
+            "bottom": 64
+          },
+          {
+            "name": "あか",
+            "x": 68,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 124,
+            "bottom": 162
+          },
+          {
+            "name": "だいだい",
+            "x": 132,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 188,
+            "bottom": 162
+          },
+          {
+            "name": "きいろ",
+            "x": 196,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 252,
+            "bottom": 162
+          },
+          {
+            "name": "みどり",
+            "x": 260,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 316,
+            "bottom": 162
+          },
+          {
+            "name": "あお",
+            "x": 324,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 380,
+            "bottom": 162
+          },
+          {
+            "name": "むらさき",
+            "x": 388,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 444,
+            "bottom": 162
+          },
+          {
+            "name": "ピンク",
+            "x": 452,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 508,
+            "bottom": 162
+          },
+          {
+            "name": "くろ",
+            "x": 516,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 572,
+            "bottom": 162
+          },
+          {
+            "name": "しろ",
+            "x": 580,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 636,
+            "bottom": 162
+          },
+          {
+            "name": "にじいろ",
+            "x": 644,
+            "y": 85,
+            "width": 56,
+            "height": 77,
+            "right": 700,
+            "bottom": 162
+          },
+          {
+            "name": "クレヨン",
+            "x": 93.515625,
+            "y": 914,
+            "width": 65.125,
+            "height": 69,
+            "right": 158.640625,
+            "bottom": 983
+          },
+          {
+            "name": "スタンプ",
+            "x": 162.640625,
+            "y": 914,
+            "width": 65.125,
+            "height": 69,
+            "right": 227.765625,
+            "bottom": 983
+          },
+          {
+            "name": "けしゴム",
+            "x": 231.765625,
+            "y": 914,
+            "width": 65.125,
+            "height": 69,
+            "right": 296.890625,
+            "bottom": 983
+          },
+          {
+            "name": "ほそい",
+            "x": 313.890625,
+            "y": 920.5,
+            "width": 56,
+            "height": 56,
+            "right": 369.890625,
+            "bottom": 976.5
+          },
+          {
+            "name": "ふつう",
+            "x": 371.890625,
+            "y": 920.5,
+            "width": 56,
+            "height": 56,
+            "right": 427.890625,
+            "bottom": 976.5
+          },
+          {
+            "name": "ふとい",
+            "x": 429.890625,
+            "y": 920.5,
+            "width": 56,
+            "height": 56,
+            "right": 485.890625,
+            "bottom": 976.5
+          },
+          {
+            "name": "ひとつもどす",
+            "x": 502.890625,
+            "y": 914,
+            "width": 62,
+            "height": 69,
+            "right": 564.890625,
+            "bottom": 983
+          },
+          {
+            "name": "あたらしいかみ",
+            "x": 568.890625,
+            "y": 914,
+            "width": 105.578125,
+            "height": 69,
+            "right": 674.46875,
+            "bottom": 983
+          }
+        ],
+        "paper": {
+          "x": 24,
+          "y": 266,
+          "width": 720,
+          "height": 540,
+          "top": 266,
+          "right": 744,
+          "bottom": 806,
+          "left": 24
+        }
+      },
+      {
+        "viewport": [
+          768,
+          1024
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "とじる",
+            "x": 668,
+            "y": 290.703125,
+            "width": 56,
+            "height": 56,
+            "right": 724,
+            "bottom": 346.703125
+          },
+          {
+            "name": "2026/9/12の作品 いまのえ",
+            "x": 55,
+            "y": 419.703125,
+            "width": 194,
+            "height": 193,
+            "right": 249,
+            "bottom": 612.703125
+          },
+          {
+            "name": "画像を保存",
+            "x": 55,
+            "y": 624.703125,
+            "width": 194,
+            "height": 56,
+            "right": 249,
+            "bottom": 680.703125
+          },
+          {
+            "name": "2026/9/12の作品",
+            "x": 287,
+            "y": 419.703125,
+            "width": 194,
+            "height": 190,
+            "right": 481,
+            "bottom": 609.703125
+          },
+          {
+            "name": "画像を保存",
+            "x": 287,
+            "y": 621.703125,
+            "width": 194,
+            "height": 56,
+            "right": 481,
+            "bottom": 677.703125
+          },
+          {
+            "name": "2026/9/12の作品",
+            "x": 519,
+            "y": 419.703125,
+            "width": 194,
+            "height": 190,
+            "right": 713,
+            "bottom": 609.703125
+          },
+          {
+            "name": "画像を保存",
+            "x": 519,
+            "y": 621.703125,
+            "width": 194,
+            "height": 56,
+            "right": 713,
+            "bottom": 677.703125
+          }
+        ],
+        "paper": {
+          "x": 120.75,
+          "y": 185,
+          "width": 526.5,
+          "height": 702,
+          "top": 185,
+          "right": 647.25,
+          "bottom": 887,
+          "left": 120.75
+        }
+      },
+      {
+        "viewport": [
+          390,
+          844
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "さくひん",
+            "x": 121.890625,
+            "y": 8,
+            "width": 90.9375,
+            "height": 56,
+            "right": 212.828125,
+            "bottom": 64
+          },
+          {
+            "name": "かみのいろ",
+            "x": 216.828125,
+            "y": 8,
+            "width": 101.171875,
+            "height": 56,
+            "right": 318,
+            "bottom": 64
+          },
+          {
+            "name": "おうちの方へ",
+            "x": 322,
+            "y": 8,
+            "width": 56,
+            "height": 56,
+            "right": 378,
+            "bottom": 64
+          },
+          {
+            "name": "あか",
+            "x": 15,
+            "y": 80,
+            "width": 70.390625,
+            "height": 48,
+            "right": 85.390625,
+            "bottom": 128
+          },
+          {
+            "name": "だいだい",
+            "x": 87.390625,
+            "y": 80,
+            "width": 70.40625,
+            "height": 48,
+            "right": 157.796875,
+            "bottom": 128
+          },
+          {
+            "name": "きいろ",
+            "x": 159.796875,
+            "y": 80,
+            "width": 70.390625,
+            "height": 48,
+            "right": 230.1875,
+            "bottom": 128
+          },
+          {
+            "name": "みどり",
+            "x": 232.1875,
+            "y": 80,
+            "width": 70.40625,
+            "height": 48,
+            "right": 302.59375,
+            "bottom": 128
+          },
+          {
+            "name": "あお",
+            "x": 304.59375,
+            "y": 80,
+            "width": 70.40625,
+            "height": 48,
+            "right": 375,
+            "bottom": 128
+          },
+          {
+            "name": "むらさき",
+            "x": 15,
+            "y": 130,
+            "width": 70.390625,
+            "height": 48,
+            "right": 85.390625,
+            "bottom": 178
+          },
+          {
+            "name": "ピンク",
+            "x": 87.390625,
+            "y": 130,
+            "width": 70.40625,
+            "height": 48,
+            "right": 157.796875,
+            "bottom": 178
+          },
+          {
+            "name": "くろ",
+            "x": 159.796875,
+            "y": 130,
+            "width": 70.390625,
+            "height": 48,
+            "right": 230.1875,
+            "bottom": 178
+          },
+          {
+            "name": "しろ",
+            "x": 232.1875,
+            "y": 130,
+            "width": 70.40625,
+            "height": 48,
+            "right": 302.59375,
+            "bottom": 178
+          },
+          {
+            "name": "にじいろ",
+            "x": 304.59375,
+            "y": 130,
+            "width": 70.40625,
+            "height": 48,
+            "right": 375,
+            "bottom": 178
+          },
+          {
+            "name": "クレヨン",
+            "x": 30.671875,
+            "y": 694.984375,
+            "width": 56,
+            "height": 62,
+            "right": 86.671875,
+            "bottom": 756.984375
+          },
+          {
+            "name": "スタンプ",
+            "x": 90.671875,
+            "y": 694.984375,
+            "width": 56,
+            "height": 62,
+            "right": 146.671875,
+            "bottom": 756.984375
+          },
+          {
+            "name": "けしゴム",
+            "x": 150.671875,
+            "y": 694.984375,
+            "width": 56,
+            "height": 62,
+            "right": 206.671875,
+            "bottom": 756.984375
+          },
+          {
+            "name": "ほそい",
+            "x": 109,
+            "y": 762.984375,
+            "width": 56,
+            "height": 44,
+            "right": 165,
+            "bottom": 806.984375
+          },
+          {
+            "name": "ふつう",
+            "x": 167,
+            "y": 762.984375,
+            "width": 56,
+            "height": 44,
+            "right": 223,
+            "bottom": 806.984375
+          },
+          {
+            "name": "ふとい",
+            "x": 225,
+            "y": 762.984375,
+            "width": 56,
+            "height": 44,
+            "right": 281,
+            "bottom": 806.984375
+          },
+          {
+            "name": "ひとつもどす",
+            "x": 212.671875,
+            "y": 694.984375,
+            "width": 56,
+            "height": 62,
+            "right": 268.671875,
+            "bottom": 756.984375
+          },
+          {
+            "name": "あたらしいかみ",
+            "x": 272.671875,
+            "y": 694.984375,
+            "width": 86.640625,
+            "height": 62,
+            "right": 359.3125,
+            "bottom": 756.984375
+          }
+        ],
+        "paper": {
+          "x": 16,
+          "y": 299.734375,
+          "width": 358,
+          "height": 268.5,
+          "top": 299.734375,
+          "right": 374,
+          "bottom": 568.234375,
+          "left": 16
+        }
+      },
+      {
+        "viewport": [
+          390,
+          844
+        ],
+        "overflow": false,
+        "buttons": [
+          {
+            "name": "とじる",
+            "x": 296,
+            "y": 191,
+            "width": 56,
+            "height": 56,
+            "right": 352,
+            "bottom": 247
+          },
+          {
+            "name": "まる",
+            "x": 38,
+            "y": 267,
+            "width": 99.328125,
+            "height": 123.328125,
+            "right": 137.328125,
+            "bottom": 390.328125
+          },
+          {
+            "name": "ばつ",
+            "x": 145.328125,
+            "y": 267,
+            "width": 99.328125,
+            "height": 123.328125,
+            "right": 244.65625,
+            "bottom": 390.328125
+          },
+          {
+            "name": "しかく",
+            "x": 252.65625,
+            "y": 267,
+            "width": 99.328125,
+            "height": 123.328125,
+            "right": 351.984375,
+            "bottom": 390.328125
+          },
+          {
+            "name": "さんかく",
+            "x": 38,
+            "y": 398.328125,
+            "width": 99.328125,
+            "height": 123.328125,
+            "right": 137.328125,
+            "bottom": 521.65625
+          },
+          {
+            "name": "うさぎ",
+            "x": 145.328125,
+            "y": 398.328125,
+            "width": 99.328125,
+            "height": 123.328125,
+            "right": 244.65625,
+            "bottom": 521.65625
+          },
+          {
+            "name": "とり",
+            "x": 252.65625,
+            "y": 398.328125,
+            "width": 99.328125,
+            "height": 123.328125,
+            "right": 351.984375,
+            "bottom": 521.65625
+          },
+          {
+            "name": "でんしゃ",
+            "x": 38,
+            "y": 529.65625,
+            "width": 99.328125,
+            "height": 123.328125,
+            "right": 137.328125,
+            "bottom": 652.984375
+          }
+        ],
+        "paper": {
+          "x": 16,
+          "y": 299.734375,
+          "width": 358,
+          "height": 268.5,
+          "top": 299.734375,
+          "right": 374,
+          "bottom": 568.234375,
+          "left": 16
+        }
+      }
+    ]
+  },
+  {
+    "engine": "chromium-failure",
+    "checks": [
+      "quota failure retains current paper and stroke; retry restores persisted work",
+      "corrupt saved collection remains intact and is never treated as empty"
+    ]
+  },
+  {
+    "engine": "chromium-recovery",
+    "checks": [
+      "initial read failure retries the original artwork, without creating a blank",
+      "competing tabs cannot overwrite newer persisted strokes; local marks remain visible and exportable"
+    ]
+  }
+]

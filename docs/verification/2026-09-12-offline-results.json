@@ -1,0 +1,22 @@
+[
+  {
+    "engine": "chromium",
+    "precachedFiles": 44,
+    "offlineSoundBytes": 24742,
+    "checks": [
+      "production hashed JS/CSS and sounds precached",
+      "foreign cache survives",
+      "server stopped with HTTP caching disabled; offline reload and local artwork persistence"
+    ]
+  },
+  {
+    "engine": "webkit",
+    "precachedFiles": 44,
+    "offlineSoundBytes": 24742,
+    "checks": [
+      "production hashed JS/CSS and sounds precached",
+      "foreign cache survives",
+      "server stopped with HTTP caching disabled; offline reload and local artwork persistence"
+    ]
+  }
+]

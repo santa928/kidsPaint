@@ -26,3 +26,9 @@ dist-ssr
 # Playwright
 .playwright/
 .playwright-cli/
+
+# Local development evidence and plans
+progress.md
+docs/superpowers/
+.superpowers/
+output/

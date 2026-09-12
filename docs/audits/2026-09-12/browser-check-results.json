@@ -1,0 +1,239 @@
+[
+  {
+    "engine": "chromium",
+    "errors": [],
+    "firstStroke": {
+      "count": 2972,
+      "bounds": [
+        135,
+        243,
+        300,
+        140
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "twoMarks": {
+      "count": 3032,
+      "bounds": [
+        135,
+        243,
+        529,
+        140
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "afterUndo": {
+      "count": 2972,
+      "bounds": [
+        135,
+        243,
+        300,
+        140
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "activeTools": [
+      "✏️",
+      "けしゴム"
+    ],
+    "afterPencilOverStroke": {
+      "count": 2391,
+      "bounds": [
+        136,
+        243,
+        299,
+        140
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "afterClear": {
+      "count": 0,
+      "bounds": null,
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2,
+      "undoEnabled": false
+    },
+    "circleBeforeRotate": {
+      "count": 3808,
+      "bounds": [
+        615,
+        213,
+        70,
+        70
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "circleAfterRotate": {
+      "count": 4126,
+      "bounds": [
+        461,
+        298,
+        53,
+        100
+      ],
+      "bitmap": [
+        768,
+        890
+      ],
+      "dpr": 2
+    },
+    "afterReload": {
+      "count": 0,
+      "bounds": null,
+      "bitmap": [
+        768,
+        890
+      ],
+      "dpr": 2
+    },
+    "multiTouch": {
+      "count": 4448,
+      "bounds": [
+        196,
+        173,
+        409,
+        310
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "multiTouchCenterAlpha": 255
+  },
+  {
+    "engine": "webkit",
+    "errors": [],
+    "firstStroke": {
+      "count": 2788,
+      "bounds": [
+        135,
+        243,
+        299,
+        139
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "twoMarks": {
+      "count": 2856,
+      "bounds": [
+        135,
+        243,
+        530,
+        139
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "afterUndo": {
+      "count": 2788,
+      "bounds": [
+        135,
+        243,
+        299,
+        139
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "activeTools": [
+      "✏️",
+      "けしゴム"
+    ],
+    "afterPencilOverStroke": {
+      "count": 2191,
+      "bounds": [
+        136,
+        243,
+        298,
+        139
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "afterClear": {
+      "count": 0,
+      "bounds": null,
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2,
+      "undoEnabled": false
+    },
+    "circleBeforeRotate": {
+      "count": 3752,
+      "bounds": [
+        615,
+        213,
+        70,
+        70
+      ],
+      "bitmap": [
+        1024,
+        634
+      ],
+      "dpr": 2
+    },
+    "circleAfterRotate": {
+      "count": 4086,
+      "bounds": [
+        461,
+        298,
+        53,
+        100
+      ],
+      "bitmap": [
+        768,
+        890
+      ],
+      "dpr": 2
+    },
+    "afterReload": {
+      "count": 0,
+      "bounds": null,
+      "bitmap": [
+        768,
+        890
+      ],
+      "dpr": 2
+    }
+  }
+]
