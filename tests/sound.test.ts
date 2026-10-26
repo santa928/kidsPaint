@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DRAWING_PRESETS } from '../src/drawingTimbres';
 
 type Automation = { method: string; value: number; time: number };
 class Param {
@@ -28,26 +29,44 @@ class Oscillator {
     this.endTimer = setTimeout(() => this.onended?.(), Math.max(0, time * 1000 - Date.now()));
   });
 }
+class Buffer {
+  samples: Float32Array;
+  duration: number;
+  constructor(length: number, sampleRate: number) { this.samples = new Float32Array(length); this.duration = length / sampleRate; }
+  getChannelData() { return this.samples; }
+}
+class BufferSource extends Oscillator {
+  playbackRate = new Param();
+  buffer: Buffer | null = null;
+  start = vi.fn((time: number) => {
+    if (this.buffer) this.stop(time + this.buffer.duration / this.playbackRate.events[0]!.value);
+  });
+}
 class Context {
   static initialState = 'running';
   static instances: Context[] = [];
   state = Context.initialState;
   destination = {};
+  sampleRate = 44100;
+  sources: BufferSource[] = [];
   oscillators: Oscillator[] = [];
   gains: Gain[] = [];
   resume = vi.fn(async () => { this.state = 'running'; });
   decodeAudioData = vi.fn(async () => ({}));
   constructor() { Context.instances.push(this); }
   get currentTime() { return Date.now() / 1000; }
+  createBuffer(_channels: number, length: number, sampleRate: number) { return new Buffer(length, sampleRate); }
+  createBufferSource() { const source = new BufferSource(); this.sources.push(source); return source; }
   createGain() { const gain = new Gain(); this.gains.push(gain); return gain; }
   createOscillator() { const osc = new Oscillator(); this.oscillators.push(osc); return osc; }
 }
 
 let sound: (typeof import('../src/SoundManager'))['soundManager'];
 const context = () => Context.instances[0]!;
-const leadNotes = () => context().oscillators.filter((_, index) => index % 2 === 0);
-const pitches = () => leadNotes().map(osc => osc.frequency.events[1]!.value);
-const active = () => context().oscillators.filter(osc => osc.disconnect.mock.calls.length === 0);
+const leadNotes = () => context().sources;
+const pitches = () => leadNotes().map(source => Number((source.playbackRate.events[0]!.value * 261.63).toFixed(2)));
+const timbres = () => leadNotes().map(source => DRAWING_PRESETS.find(preset => Math.abs(preset.duration - source.buffer!.duration) < 0.0001)!.timbre);
+const active = () => context().sources.filter(source => source.disconnect.mock.calls.length === 0);
 
 beforeEach(async () => {
   vi.useFakeTimers();
@@ -72,31 +91,42 @@ describe('drawing music', () => {
     await vi.advanceTimersByTimeAsync(1);
     await vi.advanceTimersByTimeAsync(160);
     expect(pitches()).toEqual([261.63, 329.63, 392]);
-    await vi.advanceTimersByTimeAsync(639);
+    await vi.advanceTimersByTimeAsync(559);
     expect(leadNotes()).toHaveLength(3);
     await vi.advanceTimersByTimeAsync(241);
     expect(pitches()).toEqual([261.63, 329.63, 392, 392, 329.63]);
-    await vi.advanceTimersByTimeAsync(1040);
-    expect(pitches()).toEqual([261.63, 329.63, 392, 392, 329.63, 329.63, 392, 440]);
+    await vi.advanceTimersByTimeAsync(740);
+    expect(pitches()).toEqual([261.63, 329.63, 392, 392, 329.63, 261.63, 392]);
+    expect(timbres()).toEqual(['pluck', 'pluck', 'pluck', 'pluck', 'pluck', 'bubble', 'bubble']);
     expect(random).not.toHaveBeenCalled();
   });
 
-  it('cycles distinct marimba, bubble and bell timbres at the existing output volume', async () => {
-    for (let stroke = 0; stroke < 3; stroke++) {
-      sound.startDrawingSound(); await vi.advanceTimersByTimeAsync(0);
+  it('uses all six material voices on short strokes, caches their buffers, and retains output volume', async () => {
+    for (let stroke = 0; stroke < 12; stroke++) {
+      sound.startDrawingSound(); await vi.advanceTimersByTimeAsync(20);
       sound.stopDrawingSound(); await vi.advanceTimersByTimeAsync(40);
     }
-    const [marimba, bubble, bell] = leadNotes();
-    expect(marimba!.type).toBe('triangle');
-    expect(bubble!.type).toBe('sine');
-    expect(bubble!.frequency.events[0]!.value).toBeCloseTo(261.63 * 1.35);
-    expect(bell!.type).toBe('sine');
-    expect(context().oscillators[5]!.frequency.events[0]!.value).toBeCloseTo(261.63 * 2.76);
+    expect(timbres()).toEqual([...DRAWING_PRESETS, ...DRAWING_PRESETS].map(preset => preset.timbre));
+    for (let index = 0; index < 6; index++) expect(leadNotes()[index]!.buffer).toBe(leadNotes()[index + 6]!.buffer);
     expect(context().gains[0]!.gain.events[0]!.value).toBe(4.8);
-    for (const gain of context().gains.slice(1)) {
-      expect(Math.max(...gain.gain.events.map(event => event.value))).toBeLessThanOrEqual(0.032);
-      expect(gain.gain.events[0]!.value).toBe(0);
+    for (const source of leadNotes()) {
+      const samples = source.buffer!.getChannelData();
+      expect(Math.max(...samples.map(Math.abs))).toBeLessThanOrEqual(0.028001);
+      expect(samples[0]).toBe(0);
+      expect(Math.abs(samples.at(-1)!)).toBe(0);
     }
+  });
+
+  it('visits every voice while held and continues the shared sequence on the next stroke', async () => {
+    sound.startDrawingSound(); await vi.advanceTimersByTimeAsync(12000);
+    const voices = [...new Set(timbres())];
+    expect(voices).toEqual(DRAWING_PRESETS.map(preset => preset.timbre));
+    const last = timbres().at(-1)!;
+    sound.stopDrawingSound(); sound.startDrawingSound();
+    expect(timbres().at(-1)).toBe(DRAWING_PRESETS[(DRAWING_PRESETS.findIndex(preset => preset.timbre === last) + 1) % 6]!.timbre);
+    sound.stopDrawingSound(); await vi.advanceTimersByTimeAsync(1000);
+    expect(active()).toHaveLength(0);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('makes repeated start/end calls idempotent, lands once and frees every node', async () => {
