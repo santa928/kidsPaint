@@ -1,25 +1,16 @@
 import type { StampId } from './types';
 
-type DrawingSparkleProfile = 'twinkle' | 'bubble' | 'swoosh' | 'magic';
-
 interface DrawingSoundPreset {
-    name: string;
-    leadType: OscillatorType;
-    harmonyType: OscillatorType;
-    baseNotes: readonly number[];
-    harmonyRatio: number;
-    lfoRate: number;
-    lfoDepth: number;
-    leadPeak: number;
-    harmonyPeak: number;
-    attack: number;
-    glideTo?: number;
-    sparkleProfile: DrawingSparkleProfile;
-    sparkleDelay: {
-        min: number;
-        max: number;
-    };
+    type: OscillatorType;
+    overtone: number;
+    peak: number;
+    release: number;
+    bend: number;
 }
+
+// C major pentatonic: short, consonant phrases with a pause between each answer.
+const DRAWING_NOTES = [261.63, 293.66, 329.63, 392, 440] as const;
+const DRAWING_PHRASES = [[0, 2, 3], [3, 2], [2, 3, 4, 1], [2, 1, 0]] as const;
 
 const SAMPLE_GROUPS = {
     color: ['color-chime-1', 'color-chime-2', 'color-plink-1'],
@@ -34,102 +25,27 @@ const SAMPLE_GROUPS = {
     stampRabbit: ['stamp-rabbit-hop', 'stamp-bounce-1'],
     stampBird: ['stamp-bird-chirp', 'draw-twinkle-1'],
     stampTrain: ['stamp-train-toot', 'stamp-shape-punch'],
-    drawStart: ['draw-start-magic-1', 'draw-start-magic-2', 'rainbow-glitter-1'],
-    drawTwinkle: ['draw-twinkle-1', 'draw-twinkle-2'],
-    drawBubble: ['draw-bubble-1', 'draw-bubble-2'],
-    drawSwoosh: ['draw-swoosh-1', 'draw-swoosh-2'],
-    drawMagic: ['draw-magic-1', 'draw-magic-2'],
-    strokeEnd: ['stroke-finish-ding', 'stroke-finish-spark', 'stroke-finish-pop'],
 } as const;
 
 class SoundManager {
     private static readonly OUTPUT_BOOST = 4;
     private static readonly DRAWING_PRESETS: readonly DrawingSoundPreset[] = [
-        {
-            name: 'fluffy',
-            leadType: 'triangle',
-            harmonyType: 'sine',
-            baseNotes: [196, 220, 247, 262, 294, 330],
-            harmonyRatio: 1.5,
-            lfoRate: 2.4,
-            lfoDepth: 18,
-            leadPeak: 0.038,
-            harmonyPeak: 0.024,
-            attack: 0.1,
-            sparkleProfile: 'twinkle',
-            sparkleDelay: { min: 180, max: 280 },
-        },
-        {
-            name: 'sparkle',
-            leadType: 'sine',
-            harmonyType: 'triangle',
-            baseNotes: [330, 392, 440, 494, 523, 587],
-            harmonyRatio: 2,
-            lfoRate: 5.2,
-            lfoDepth: 12,
-            leadPeak: 0.034,
-            harmonyPeak: 0.02,
-            attack: 0.06,
-            sparkleProfile: 'twinkle',
-            sparkleDelay: { min: 110, max: 210 },
-        },
-        {
-            name: 'zoom',
-            leadType: 'sawtooth',
-            harmonyType: 'sine',
-            baseNotes: [165, 196, 220, 247, 262],
-            harmonyRatio: 1.25,
-            lfoRate: 1.8,
-            lfoDepth: 28,
-            leadPeak: 0.026,
-            harmonyPeak: 0.028,
-            attack: 0.08,
-            glideTo: 1.35,
-            sparkleProfile: 'swoosh',
-            sparkleDelay: { min: 210, max: 340 },
-        },
-        {
-            name: 'bubble',
-            leadType: 'square',
-            harmonyType: 'triangle',
-            baseNotes: [147, 165, 175, 196, 220, 247],
-            harmonyRatio: 1.75,
-            lfoRate: 3.6,
-            lfoDepth: 20,
-            leadPeak: 0.022,
-            harmonyPeak: 0.026,
-            attack: 0.05,
-            sparkleProfile: 'bubble',
-            sparkleDelay: { min: 150, max: 260 },
-        },
-        {
-            name: 'magic',
-            leadType: 'triangle',
-            harmonyType: 'sine',
-            baseNotes: [220, 262, 311, 370, 415, 494],
-            harmonyRatio: 1.68,
-            lfoRate: 6,
-            lfoDepth: 34,
-            leadPeak: 0.032,
-            harmonyPeak: 0.026,
-            attack: 0.07,
-            glideTo: 0.88,
-            sparkleProfile: 'magic',
-            sparkleDelay: { min: 130, max: 240 },
-        },
+        { type: 'triangle', overtone: 4, peak: 0.032, release: 0.18, bend: 1 }, // Marimba
+        { type: 'sine', overtone: 2, peak: 0.03, release: 0.13, bend: 1.35 }, // Bubble
+        { type: 'sine', overtone: 2.76, peak: 0.026, release: 0.28, bend: 1 }, // Bell
     ];
 
     private audioCtx: AudioContext | null = null;
     private outputGain: GainNode | null = null;
-    private drawLeadOsc: OscillatorNode | null = null;
-    private drawHarmonyOsc: OscillatorNode | null = null;
-    private drawLfoOsc: OscillatorNode | null = null;
-    private drawLfoGain: GainNode | null = null;
-    private drawLeadGain: GainNode | null = null;
-    private drawHarmonyGain: GainNode | null = null;
-    private drawGain: GainNode | null = null;
     private currentDrawingPreset: DrawingSoundPreset | null = null;
-    private sparkleTimer: number | null = null;
+    private drawingTimer: number | null = null;
+    private drawingVoices = new Map<OscillatorNode, GainNode>();
+    private drawingRequested = false;
+    private drawingSession = 0;
+    private strokeIndex = 0;
+    private phraseIndex = 0;
+    private noteIndex = 0;
+    private endingPreset: DrawingSoundPreset | null = null;
     private sampleBuffers: Map<string, AudioBuffer> = new Map();
     private sampleLoadPromises: Map<string, Promise<void>> = new Map();
     private samplePreloadStarted = false;
@@ -298,204 +214,115 @@ class SoundManager {
     }
 
     public startDrawingSound() {
-        const ctx = this.getPlayableContext();
-        if (!ctx) return;
+        if (!this.enabled || this.drawingRequested) return;
+        this.drawingRequested = true;
+        const session = ++this.drawingSession;
+        this.endingPreset = null;
+        this.releaseDrawingVoices();
 
-        if (this.drawLeadOsc) return; // Already playing
+        // resume() must begin in the pointer gesture. A released/muted stroke must
+        // never start later if a mobile browser resolves that promise slowly.
+        this.initCtx();
+        if (!this.audioCtx) {
+            this.drawingRequested = false;
+            return;
+        }
+        if (!this.isUnlocked || this.audioCtx.state !== 'running') {
+            void this.unlock().then(() => {
+                if (session !== this.drawingSession || !this.drawingRequested || !this.enabled) return;
+                if (this.audioCtx?.state === 'running') this.beginDrawingPhrase(this.audioCtx);
+                else this.drawingRequested = false;
+            });
+            return;
+        }
+        this.beginDrawingPhrase(this.audioCtx);
+    }
 
-        const preset = this.pickOne(SoundManager.DRAWING_PRESETS);
-        const base = this.pickOne(preset.baseNotes);
-        const leadOsc = ctx.createOscillator();
-        const harmonyOsc = ctx.createOscillator();
-        const lfoOsc = ctx.createOscillator();
-        const lfoGain = ctx.createGain();
-        const leadGain = ctx.createGain();
-        const harmonyGain = ctx.createGain();
-        const masterGain = ctx.createGain();
+    private beginDrawingPhrase(ctx: AudioContext) {
+        this.currentDrawingPreset = SoundManager.DRAWING_PRESETS[this.strokeIndex++ % SoundManager.DRAWING_PRESETS.length]!;
+        this.phraseIndex = 0;
+        this.noteIndex = 0;
+        this.playNextDrawingNote(ctx);
+    }
+
+    private playNextDrawingNote(ctx: AudioContext) {
+        this.drawingTimer = null;
+        const preset = this.currentDrawingPreset;
+        if (!this.drawingRequested || !preset) return;
+        // Do not keep timers or a held note alive in a suspended/background tab.
+        if (ctx.state !== 'running') {
+            this.stopDrawingSound();
+            return;
+        }
+        const phrase = DRAWING_PHRASES[this.phraseIndex % DRAWING_PHRASES.length]!;
+        this.playDrawingNote(ctx, preset, DRAWING_NOTES[phrase[this.noteIndex]!]!);
+        this.noteIndex += 1;
+        let delay = this.noteIndex % 2 === 1 ? 240 : 160;
+        if (this.noteIndex === phrase.length) {
+            delay = 640;
+            this.noteIndex = 0;
+            this.phraseIndex += 1;
+        }
+        this.drawingTimer = window.setTimeout(() => this.playNextDrawingNote(ctx), delay);
+    }
+
+    private playDrawingNote(ctx: AudioContext, preset: DrawingSoundPreset, frequency: number, ending = false) {
         const now = ctx.currentTime;
-
-        this.playSample(ctx, SAMPLE_GROUPS.drawStart, { gain: 0.38, jitter: 0.08 });
-
-        leadOsc.type = preset.leadType;
-        leadOsc.frequency.setValueAtTime(base, now);
-        if (preset.glideTo) {
-            leadOsc.frequency.exponentialRampToValueAtTime(base * preset.glideTo, now + 0.24);
-        }
-        leadOsc.detune.setValueAtTime((Math.random() - 0.5) * 8, now);
-
-        harmonyOsc.type = preset.harmonyType;
-        harmonyOsc.frequency.setValueAtTime(base * preset.harmonyRatio, now);
-        if (preset.glideTo) {
-            harmonyOsc.frequency.exponentialRampToValueAtTime(base * preset.harmonyRatio * preset.glideTo, now + 0.28);
-        }
-        harmonyOsc.detune.setValueAtTime((Math.random() - 0.5) * 12, now);
-
-        lfoOsc.type = 'sine';
-        lfoOsc.frequency.setValueAtTime(preset.lfoRate + Math.random() * 0.8, now);
-        lfoGain.gain.setValueAtTime(preset.lfoDepth + Math.random() * 8, now);
-
-        leadGain.gain.setValueAtTime(preset.leadPeak, now);
-        harmonyGain.gain.setValueAtTime(preset.harmonyPeak, now);
-
-        masterGain.gain.setValueAtTime(0.0001, now);
-        masterGain.gain.linearRampToValueAtTime(1, now + preset.attack);
-
-        lfoOsc.connect(lfoGain);
-        lfoGain.connect(leadOsc.frequency);
-        lfoGain.connect(harmonyOsc.frequency);
-
-        leadOsc.connect(leadGain);
-        harmonyOsc.connect(harmonyGain);
-        leadGain.connect(masterGain);
-        harmonyGain.connect(masterGain);
-        masterGain.connect(this.getOutputGain(ctx));
-
-        leadOsc.start(now);
-        harmonyOsc.start(now);
-        lfoOsc.start(now);
-
-        this.drawLeadOsc = leadOsc;
-        this.drawHarmonyOsc = harmonyOsc;
-        this.drawLfoOsc = lfoOsc;
-        this.drawLfoGain = lfoGain;
-        this.drawLeadGain = leadGain;
-        this.drawHarmonyGain = harmonyGain;
-        this.drawGain = masterGain;
-        this.currentDrawingPreset = preset;
-
-        this.scheduleNextSparkle();
-    }
-
-    private scheduleNextSparkle() {
-        this.clearSparkleTimer();
-        if (!this.drawLeadOsc) return;
-        const delay = this.currentDrawingPreset?.sparkleDelay ?? { min: 170, max: 230 };
-        this.sparkleTimer = window.setTimeout(() => {
-            this.playDrawingSparkle();
-            this.scheduleNextSparkle();
-        }, this.randomBetween(delay.min, delay.max));
-    }
-
-    private clearSparkleTimer() {
-        if (this.sparkleTimer !== null) {
-            clearTimeout(this.sparkleTimer);
-            this.sparkleTimer = null;
-        }
-    }
-
-    private playDrawingSparkle() {
-        if (!this.drawLeadOsc) return;
-        const ctx = this.getPlayableContext();
-        if (!ctx) return;
-
-        const now = ctx.currentTime;
-        const profile = this.currentDrawingPreset?.sparkleProfile ?? 'twinkle';
-
-        if (profile === 'bubble') {
-            if (Math.random() < 0.8 && this.playSample(ctx, SAMPLE_GROUPS.drawBubble, { gain: 0.42, jitter: 0.1 })) return;
-            this.playOneShotTone(ctx, now, 'sine', this.randomBetween(240, 380), this.randomBetween(420, 620), {
-                peak: 0.03,
-                attack: 0.006,
-                release: 0.09,
-            });
-            return;
-        }
-
-        if (profile === 'swoosh') {
-            if (Math.random() < 0.75 && this.playSample(ctx, SAMPLE_GROUPS.drawSwoosh, { gain: 0.38, jitter: 0.08 })) return;
-            this.playNoiseBurst(ctx, now, {
-                duration: 0.12,
-                peak: 0.025,
-                filterFrequency: this.randomBetween(900, 1800),
-                filterType: 'bandpass',
-            });
-            this.playOneShotTone(ctx, now + 0.02, 'triangle', this.randomBetween(420, 620), this.randomBetween(760, 980), {
-                peak: 0.026,
-                attack: 0.004,
-                release: 0.09,
-            });
-            return;
-        }
-
-        if (profile === 'magic') {
-            if (Math.random() < 0.8 && this.playSample(ctx, SAMPLE_GROUPS.drawMagic, { gain: 0.4, jitter: 0.08 })) return;
-            this.playOneShotTone(ctx, now, 'sine', this.randomBetween(720, 980), this.randomBetween(1120, 1480), {
-                peak: 0.026,
-                attack: 0.004,
-                release: 0.08,
-            });
-            this.playOneShotTone(ctx, now + 0.045, 'triangle', this.randomBetween(520, 680), this.randomBetween(880, 1180), {
-                peak: 0.022,
-                attack: 0.004,
-                release: 0.08,
-            });
-            return;
-        }
-
-        if (Math.random() < 0.8 && this.playSample(ctx, SAMPLE_GROUPS.drawTwinkle, { gain: 0.42, jitter: 0.1 })) return;
-        this.playOneShotTone(ctx, now, 'sine', this.randomBetween(660, 1180), this.randomBetween(920, 1540), {
-            peak: 0.032,
-            attack: 0.006,
-            release: 0.11,
+        const duration = ending ? 0.2 : preset.release;
+        // A quiet, quickly decaying partial changes the material of each voice.
+        // The combined peak stays below the old sustained lead + harmony.
+        [1, preset.overtone].forEach((ratio, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const release = duration * (index === 0 ? 1 : 0.55);
+            osc.type = index === 0 ? preset.type : 'sine';
+            osc.frequency.setValueAtTime(frequency * ratio * (index === 0 ? preset.bend : 1), now);
+            osc.frequency.exponentialRampToValueAtTime(frequency * ratio, now + 0.05);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(preset.peak * (index === 0 ? 1 : 0.18) * (ending ? 0.75 : 1), now + 0.008);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + release);
+            gain.gain.linearRampToValueAtTime(0, now + release + 0.01);
+            osc.connect(gain);
+            gain.connect(this.getOutputGain(ctx));
+            this.drawingVoices.set(osc, gain);
+            osc.onended = () => {
+                osc.disconnect();
+                gain.disconnect();
+                this.drawingVoices.delete(osc);
+            };
+            osc.start(now);
+            osc.stop(now + release + 0.02);
         });
     }
 
-    private clearDrawingNodes() {
-        this.drawLeadOsc = null;
-        this.drawHarmonyOsc = null;
-        this.drawLfoOsc = null;
-        this.drawLfoGain = null;
-        this.drawLeadGain = null;
-        this.drawHarmonyGain = null;
-        this.drawGain = null;
-        this.currentDrawingPreset = null;
+    private releaseDrawingVoices() {
+        if (!this.audioCtx) return;
+        const now = this.audioCtx.currentTime;
+        for (const [osc, gain] of this.drawingVoices) {
+            if (typeof gain.gain.cancelAndHoldAtTime === 'function') {
+                gain.gain.cancelAndHoldAtTime(now);
+            } else {
+                // Firefox lacks cancelAndHoldAtTime; preserve the current level
+                // before cancelling automation so release cannot interrupt saving.
+                const level = gain.gain.value;
+                gain.gain.cancelScheduledValues(now);
+                gain.gain.setValueAtTime(level, now);
+            }
+            gain.gain.linearRampToValueAtTime(0, now + 0.025);
+            osc.stop(now + 0.03);
+        }
     }
 
     public stopDrawingSound() {
-        this.clearSparkleTimer();
-        if (!this.audioCtx) return;
-        if (
-            !this.drawLeadOsc ||
-            !this.drawHarmonyOsc ||
-            !this.drawLfoOsc ||
-            !this.drawLfoGain ||
-            !this.drawLeadGain ||
-            !this.drawHarmonyGain ||
-            !this.drawGain
-        ) {
-            this.clearDrawingNodes();
-            return;
+        this.drawingRequested = false;
+        this.drawingSession += 1;
+        if (this.drawingTimer !== null) {
+            window.clearTimeout(this.drawingTimer);
+            this.drawingTimer = null;
         }
-
-        const leadOsc = this.drawLeadOsc;
-        const harmonyOsc = this.drawHarmonyOsc;
-        const lfoOsc = this.drawLfoOsc;
-        const lfoGain = this.drawLfoGain;
-        const leadGain = this.drawLeadGain;
-        const harmonyGain = this.drawHarmonyGain;
-        const masterGain = this.drawGain;
-        const now = this.audioCtx.currentTime;
-        const stopAt = now + 0.12;
-
-        this.clearDrawingNodes();
-
-        masterGain.gain.cancelScheduledValues(now);
-        masterGain.gain.setValueAtTime(Math.max(masterGain.gain.value, 0.0001), now);
-        masterGain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
-
-        leadOsc.stop(stopAt);
-        harmonyOsc.stop(stopAt);
-        lfoOsc.stop(stopAt);
-
-        window.setTimeout(() => {
-            leadOsc.disconnect();
-            harmonyOsc.disconnect();
-            lfoOsc.disconnect();
-            lfoGain.disconnect();
-            leadGain.disconnect();
-            harmonyGain.disconnect();
-            masterGain.disconnect();
-        }, 170);
+        this.endingPreset = this.enabled ? this.currentDrawingPreset : null;
+        this.currentDrawingPreset = null;
+        this.releaseDrawingVoices();
     }
 
     private playOneShotTone(
@@ -756,33 +583,12 @@ class SoundManager {
         this.pickOne([...(themedVariants[stampId ?? 'circle'] ?? []), ...shapeVariants])();
     }
 
-    /** Plays one of several cheerful stroke-ending flourishes. */
+    /** Resolve the last phrase quietly to its tonic, once per completed stroke. */
     public playStrokeEndSound() {
-        const ctx = this.getPlayableContext();
-        if (!ctx) return;
-
-        const now = ctx.currentTime;
-        if (this.playSample(ctx, SAMPLE_GROUPS.strokeEnd, { gain: 0.5, jitter: 0.06 })) return;
-        const variants = [
-            () => {
-                this.playOneShotTone(ctx, now, 'triangle', 320, 520, { peak: 0.065, attack: 0.008, release: 0.14 });
-                this.playOneShotTone(ctx, now + 0.03, 'sine', 520, 760, { peak: 0.045, attack: 0.006, release: 0.11 });
-            },
-            () => {
-                this.playOneShotTone(ctx, now, 'sine', 640, 980, { peak: 0.048, attack: 0.004, release: 0.09 });
-                this.playOneShotTone(ctx, now + 0.055, 'triangle', 820, 1180, { peak: 0.038, attack: 0.004, release: 0.08 });
-            },
-            () => {
-                this.playNoiseBurst(ctx, now, {
-                    duration: 0.11,
-                    peak: 0.022,
-                    filterFrequency: 2200,
-                    filterType: 'bandpass',
-                });
-                this.playOneShotTone(ctx, now + 0.025, 'triangle', 420, 300, { peak: 0.042, attack: 0.006, release: 0.1 });
-            },
-        ];
-        this.pickOne(variants)();
+        const preset = this.endingPreset;
+        this.endingPreset = null;
+        if (!preset || !this.enabled || this.audioCtx?.state !== 'running') return;
+        this.playDrawingNote(this.audioCtx, preset, DRAWING_NOTES[0], true);
     }
 }
 
