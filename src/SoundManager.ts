@@ -1,16 +1,7 @@
 import type { StampId } from './types';
 
-interface DrawingSoundPreset {
-    type: OscillatorType;
-    overtone: number;
-    peak: number;
-    release: number;
-    bend: number;
-}
-
-// C major pentatonic: short, consonant phrases with a pause between each answer.
-const DRAWING_NOTES = [261.63, 293.66, 329.63, 392, 440] as const;
-const DRAWING_PHRASES = [[0, 2, 3], [3, 2], [2, 3, 4, 1], [2, 1, 0]] as const;
+import { DRAWING_NOTES, DRAWING_PRESETS, renderDrawingTimbre } from './drawingTimbres';
+import type { DrawingSoundPreset, DrawingTimbre } from './drawingTimbres';
 
 const SAMPLE_GROUPS = {
     color: ['color-chime-1', 'color-chime-2', 'color-plink-1'],
@@ -29,20 +20,15 @@ const SAMPLE_GROUPS = {
 
 class SoundManager {
     private static readonly OUTPUT_BOOST = 4;
-    private static readonly DRAWING_PRESETS: readonly DrawingSoundPreset[] = [
-        { type: 'triangle', overtone: 4, peak: 0.032, release: 0.18, bend: 1 }, // Marimba
-        { type: 'sine', overtone: 2, peak: 0.03, release: 0.13, bend: 1.35 }, // Bubble
-        { type: 'sine', overtone: 2.76, peak: 0.026, release: 0.28, bend: 1 }, // Bell
-    ];
-
     private audioCtx: AudioContext | null = null;
     private outputGain: GainNode | null = null;
     private currentDrawingPreset: DrawingSoundPreset | null = null;
     private drawingTimer: number | null = null;
-    private drawingVoices = new Map<OscillatorNode, GainNode>();
+    private drawingVoices = new Map<AudioBufferSourceNode, { gain: GainNode; endAt: number }>();
     private drawingRequested = false;
     private drawingSession = 0;
-    private strokeIndex = 0;
+    private timbreIndex = 0;
+    private drawingBuffers = new Map<DrawingTimbre, AudioBuffer>();
     private phraseIndex = 0;
     private noteIndex = 0;
     private endingPreset: DrawingSoundPreset | null = null;
@@ -239,7 +225,7 @@ class SoundManager {
     }
 
     private beginDrawingPhrase(ctx: AudioContext) {
-        this.currentDrawingPreset = SoundManager.DRAWING_PRESETS[this.strokeIndex++ % SoundManager.DRAWING_PRESETS.length]!;
+        this.currentDrawingPreset = DRAWING_PRESETS[this.timbreIndex++ % DRAWING_PRESETS.length]!;
         this.phraseIndex = 0;
         this.noteIndex = 0;
         this.playNextDrawingNote(ctx);
@@ -247,19 +233,24 @@ class SoundManager {
 
     private playNextDrawingNote(ctx: AudioContext) {
         this.drawingTimer = null;
+        if (!this.drawingRequested || !this.currentDrawingPreset) return;
+        // Share the same round-robin across strokes and held-finger phrases.
+        // Change at the next phrase onset so a release during a rest lands in the last voice.
+        if (this.noteIndex === 0 && this.phraseIndex > 0 && this.phraseIndex % 2 === 0) {
+            this.currentDrawingPreset = DRAWING_PRESETS[this.timbreIndex++ % DRAWING_PRESETS.length]!;
+        }
         const preset = this.currentDrawingPreset;
-        if (!this.drawingRequested || !preset) return;
         // Do not keep timers or a held note alive in a suspended/background tab.
         if (ctx.state !== 'running') {
             this.stopDrawingSound();
             return;
         }
-        const phrase = DRAWING_PHRASES[this.phraseIndex % DRAWING_PHRASES.length]!;
+        const phrase = preset.phrases[this.phraseIndex % preset.phrases.length]!;
         this.playDrawingNote(ctx, preset, DRAWING_NOTES[phrase[this.noteIndex]!]!);
         this.noteIndex += 1;
-        let delay = this.noteIndex % 2 === 1 ? 240 : 160;
+        let delay = preset.rhythm[(this.noteIndex - 1) % 2]!;
         if (this.noteIndex === phrase.length) {
-            delay = 640;
+            delay = preset.rest;
             this.noteIndex = 0;
             this.phraseIndex += 1;
         }
@@ -268,37 +259,43 @@ class SoundManager {
 
     private playDrawingNote(ctx: AudioContext, preset: DrawingSoundPreset, frequency: number, ending = false) {
         const now = ctx.currentTime;
-        const duration = ending ? 0.2 : preset.release;
-        // A quiet, quickly decaying partial changes the material of each voice.
-        // The combined peak stays below the old sustained lead + harmony.
-        [1, preset.overtone].forEach((ratio, index) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            const release = duration * (index === 0 ? 1 : 0.55);
-            osc.type = index === 0 ? preset.type : 'sine';
-            osc.frequency.setValueAtTime(frequency * ratio * (index === 0 ? preset.bend : 1), now);
-            osc.frequency.exponentialRampToValueAtTime(frequency * ratio, now + 0.05);
-            gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(preset.peak * (index === 0 ? 1 : 0.18) * (ending ? 0.75 : 1), now + 0.008);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + release);
-            gain.gain.linearRampToValueAtTime(0, now + release + 0.01);
-            osc.connect(gain);
-            gain.connect(this.getOutputGain(ctx));
-            this.drawingVoices.set(osc, gain);
-            osc.onended = () => {
-                osc.disconnect();
-                gain.disconnect();
-                this.drawingVoices.delete(osc);
-            };
-            osc.start(now);
-            osc.stop(now + release + 0.02);
-        });
+        let buffer = this.drawingBuffers.get(preset.timbre);
+        if (!buffer) {
+            const samples = renderDrawingTimbre(preset, ctx.sampleRate);
+            buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate);
+            buffer.getChannelData(0).set(samples);
+            this.drawingBuffers.set(preset.timbre, buffer);
+        }
+        const source = ctx.createBufferSource();
+        const gain = ctx.createGain();
+        const rate = frequency / DRAWING_NOTES[0];
+        const duration = ending ? Math.min(0.24, buffer.duration / rate) : buffer.duration / rate;
+        const level = ending ? 0.75 : 1;
+        source.buffer = buffer;
+        source.playbackRate.setValueAtTime(rate, now);
+        // The buffer contains the instrument's own attack, body and decay.
+        gain.gain.setValueAtTime(level, now);
+        if (ending) {
+            gain.gain.setValueAtTime(level, now + duration - 0.025);
+            gain.gain.linearRampToValueAtTime(0, now + duration);
+        }
+        source.connect(gain);
+        gain.connect(this.getOutputGain(ctx));
+        this.drawingVoices.set(source, { gain, endAt: now + duration });
+        source.onended = () => {
+            source.onended = null;
+            source.disconnect();
+            gain.disconnect();
+            this.drawingVoices.delete(source);
+        };
+        source.start(now);
+        if (ending && duration < buffer.duration / rate) source.stop(now + duration);
     }
 
     private releaseDrawingVoices() {
         if (!this.audioCtx) return;
         const now = this.audioCtx.currentTime;
-        for (const [osc, gain] of this.drawingVoices) {
+        for (const [source, { gain, endAt }] of this.drawingVoices) {
             if (typeof gain.gain.cancelAndHoldAtTime === 'function') {
                 gain.gain.cancelAndHoldAtTime(now);
             } else {
@@ -309,7 +306,9 @@ class SoundManager {
                 gain.gain.setValueAtTime(level, now);
             }
             gain.gain.linearRampToValueAtTime(0, now + 0.025);
-            osc.stop(now + 0.03);
+            // Buffers already end naturally. Do not reschedule an end past that
+            // boundary: Chromium can emit ended twice for such a stop.
+            if (now + 0.03 < endAt) source.stop(now + 0.03);
         }
     }
 
