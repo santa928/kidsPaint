@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type Automation = { method: string; value: number; time: number };
 class Param {
+  value = 0;
   events: Automation[] = [];
   setValueAtTime(value: number, time: number) { this.events.push({ method: 'set', value, time }); }
   linearRampToValueAtTime(value: number, time: number) { this.events.push({ method: 'linear', value, time }); }
@@ -120,6 +121,27 @@ describe('drawing music', () => {
     expect(vi.getTimerCount()).toBe(0);
     expect(leadNotes()).toHaveLength(2);
     expect(context().gains.slice(1).every(gain => gain.gain.events.some(event => event.method === 'hold'))).toBe(true);
+  });
+
+  it('fades and releases voices when cancelAndHoldAtTime is unavailable', async () => {
+    const hold = Param.prototype.cancelAndHoldAtTime;
+    Object.defineProperty(Param.prototype, 'cancelAndHoldAtTime', { value: undefined, configurable: true });
+    try {
+      sound.startDrawingSound(); await vi.advanceTimersByTimeAsync(20);
+      const gains = context().gains.slice(1);
+      gains.forEach(gain => { gain.gain.value = 0.014; });
+      expect(() => sound.stopDrawingSound()).not.toThrow();
+      for (const gain of gains) {
+        expect(gain.gain.events).toContainEqual({ method: 'set', value: 0.014, time: 0.02 });
+        expect(gain.gain.events.at(-1)).toEqual({ method: 'linear', value: 0, time: 0.045 });
+      }
+      sound.playStrokeEndSound(); sound.setEnabled(false);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(active()).toHaveLength(0);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      Object.defineProperty(Param.prototype, 'cancelAndHoldAtTime', { value: hold, configurable: true });
+    }
   });
 
   it('survives rapid strokes and a long stroke with bounded overlap and no residual timer', async () => {

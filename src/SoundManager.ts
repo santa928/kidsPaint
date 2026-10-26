@@ -299,7 +299,15 @@ class SoundManager {
         if (!this.audioCtx) return;
         const now = this.audioCtx.currentTime;
         for (const [osc, gain] of this.drawingVoices) {
-            gain.gain.cancelAndHoldAtTime(now);
+            if (typeof gain.gain.cancelAndHoldAtTime === 'function') {
+                gain.gain.cancelAndHoldAtTime(now);
+            } else {
+                // Firefox lacks cancelAndHoldAtTime; preserve the current level
+                // before cancelling automation so release cannot interrupt saving.
+                const level = gain.gain.value;
+                gain.gain.cancelScheduledValues(now);
+                gain.gain.setValueAtTime(level, now);
+            }
             gain.gain.linearRampToValueAtTime(0, now + 0.025);
             osc.stop(now + 0.03);
         }
